@@ -1,0 +1,62 @@
+[
+    {
+        "merged": "com.example.clawlessexplorer.app-merged_res-38:/layout_bottom_sheet_file_actions.xml.flat",
+        "source": "com.example.clawlessexplorer.app-main-40:/layout/bottom_sheet_file_actions.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/menu_menu_drawer.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/menu/menu_drawer.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/layout_dialog_text_viewer.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/layout/dialog_text_viewer.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/menu_menu_main.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/menu/menu_main.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/layout_nav_header.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/layout/nav_header.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/layout_bottom_sheet_file_actions.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/layout/bottom_sheet_file_actions.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/layout_activity_main.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.example.clawlessexplorer.app-merged_res-38:/layout_activity_main.xml.flat",
+        "source": "com.example.clawlessexplorer.app-main-40:/layout/activity_main.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/drawable_bg_bottom_sheet.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/drawable/bg_bottom_sheet.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/drawable_ic_menu.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/drawable/ic_menu.xml"
+    },
+    {
+        "merged": "com.example.clawlessexplorer.app-merged_res-38:/drawable_ic_secure.xml.flat",
+        "source": "com.example.clawlessexplorer.app-main-40:/drawable/ic_secure.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/layout_item_file.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/layout/item_file.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/menu_menu_selection.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/menu/menu_selection.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/drawable_bg_icon_circle.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/drawable/bg_icon_circle.xml"
+    },
+    {
+        "merged": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-merged_res-38:/xml_file_paths.xml.flat",
+        "source": "/home/lee/.gradle/daemon/8.5/com.example.clawlessexplorer.app-main-40:/xml/file_paths.xml"
+    }
+]
