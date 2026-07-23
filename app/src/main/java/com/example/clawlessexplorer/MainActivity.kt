@@ -15,6 +15,7 @@ import android.text.TextWatcher
 import android.text.format.Formatter
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -30,6 +31,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.clawlessexplorer.databinding.ActivityMainBinding
 import com.example.clawlessexplorer.server.FileServer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -66,6 +68,9 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         setupListeners()
         setupSearch()
+        setupFilterChips()
+        setupSwipeRefresh()
+        setupSelectionBar()
         setupBackPress()
         setupFabScrollBehavior()
         updateStorageInfo()
@@ -224,17 +229,29 @@ class MainActivity : AppCompatActivity() {
     private fun updateToolbarForSelection() {
         if (binding.searchLayout.visibility == View.VISIBLE) toggleSearch()
         binding.toolbar.menu.clear()
-        binding.toolbar.inflateMenu(R.menu.menu_selection)
         binding.btnMenu.setImageResource(R.drawable.ic_close)
         binding.btnMenu.setOnClickListener {
             adapter.clearSelection()
             resetToolbar()
         }
         binding.btnSearch.visibility = View.GONE
+        binding.filterScroll.visibility = View.GONE
+
+        // Show the bottom action bar
+        binding.selectionBar.visibility = View.VISIBLE
+        binding.selectionBar.translationY = 200f
+        binding.selectionBar.alpha = 0f
+        binding.selectionBar.animate()
+            .translationY(0f)
+            .alpha(1f)
+            .setDuration(220L)
+            .start()
+        binding.fabAdd.hide()
     }
 
     private fun updateSelectionTitle(count: Int) {
         binding.tvTypewriter.animateText("$count selected")
+        binding.selectionBarCount.text = if (count == 1) "1 item selected" else "$count items selected"
     }
 
     private fun resetToolbar() {
@@ -246,6 +263,16 @@ class MainActivity : AppCompatActivity() {
             binding.drawerLayout.openDrawer(GravityCompat.START)
         }
         binding.btnSearch.visibility = View.VISIBLE
+        binding.filterScroll.visibility = View.VISIBLE
+
+        // Hide the bottom action bar
+        binding.selectionBar.animate()
+            .translationY(200f)
+            .alpha(0f)
+            .setDuration(180L)
+            .withEndAction { binding.selectionBar.visibility = View.GONE }
+            .start()
+        binding.fabAdd.show()
     }
 
     private fun setupListeners() {
@@ -343,6 +370,73 @@ class MainActivity : AppCompatActivity() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    private fun setupFilterChips() {
+        binding.filterChipGroup.setOnCheckedStateChangeListener { group, checkedIds ->
+            val checkedId = checkedIds.firstOrNull() ?: R.id.chipFilterAll
+            val filter = when (checkedId) {
+                R.id.chipFilterImage -> FileAdapter.TypeFilter.IMAGE
+                R.id.chipFilterVideo -> FileAdapter.TypeFilter.VIDEO
+                R.id.chipFilterAudio -> FileAdapter.TypeFilter.AUDIO
+                R.id.chipFilterDocs -> FileAdapter.TypeFilter.DOCUMENT
+                R.id.chipFilterArchive -> FileAdapter.TypeFilter.ARCHIVE
+                R.id.chipFilterApk -> FileAdapter.TypeFilter.APK
+                else -> FileAdapter.TypeFilter.ALL
+            }
+            adapter.setTypeFilter(filter)
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setColorSchemeColors(
+            ContextCompat.getColor(this, R.color.md_primary),
+            ContextCompat.getColor(this, R.color.md_secondary),
+            ContextCompat.getColor(this, R.color.md_tertiary)
+        )
+        binding.swipeRefresh.setProgressBackgroundColorSchemeColor(
+            ContextCompat.getColor(this, R.color.md_surface_container)
+        )
+        binding.swipeRefresh.setOnRefreshListener {
+            loadFiles(currentPath)
+            updateStorageInfo()
+            binding.swipeRefresh.postDelayed({
+                if (binding.swipeRefresh.isRefreshing) binding.swipeRefresh.isRefreshing = false
+            }, 800)
+        }
+    }
+
+    private fun setupSelectionBar() {
+        binding.selectionDelete.setOnClickListener { deleteSelectedFiles() }
+        binding.selectionShare.setOnClickListener { shareSelectedFiles() }
+        binding.selectionCopy.setOnClickListener { copySelectedToClipboard() }
+        binding.selectionMore.setOnClickListener {
+            val selected = adapter.getSelectedFiles()
+            if (selected.size == 1) {
+                showFileActions(selected.first())
+            } else {
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("${selected.size} items")
+                    .setItems(arrayOf("Move", "Rename", "Properties")) { _, which ->
+                        when (which) {
+                            0 -> Toast.makeText(this, "Move — coming soon", Toast.LENGTH_SHORT).show()
+                            1 -> Toast.makeText(this, "Rename — coming soon", Toast.LENGTH_SHORT).show()
+                            2 -> Toast.makeText(this, "Properties — coming soon", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .show()
+            }
+        }
+    }
+
+    private fun copySelectedToClipboard() {
+        val selected = adapter.getSelectedFiles()
+        if (selected.isEmpty()) return
+        val paths = selected.joinToString("\n") { it.absolutePath }
+        val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("File paths", paths)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(this, "Copied ${selected.size} path(s)", Toast.LENGTH_SHORT).show()
     }
 
     private fun startSpeechToText() {
@@ -448,8 +542,37 @@ class MainActivity : AppCompatActivity() {
             "$count items · Folder"
         } else {
             val sizeStr = Formatter.formatShortFileSize(this, file.length())
-            "$sizeStr · File"
+            val ext = file.extension.uppercase().ifEmpty { "FILE" }
+            "$sizeStr · ${ext} file"
         }
+
+        // Populate the preview badge
+        val (badgeRes, iconRes, tintRes) = styleForPreview(file)
+        view.findViewById<View>(R.id.previewBadge).setBackgroundResource(badgeRes)
+        val previewIcon = view.findViewById<ImageView>(R.id.previewIcon)
+        previewIcon.setImageResource(iconRes)
+        previewIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(this, tintRes)
+        )
+
+        view.findViewById<TextView>(R.id.actionTitle).text = file.name
+        view.findViewById<TextView>(R.id.actionSubtitle).text = if (file.isDirectory) {
+            val count = try { file.list()?.size ?: 0 } catch (e: Exception) { 0 }
+            "$count items · Folder"
+        } else {
+            val sizeStr = Formatter.formatShortFileSize(this, file.length())
+            val ext = file.extension.uppercase().ifEmpty { "FILE" }
+            "$sizeStr · ${ext} file"
+        }
+
+        // Populate the preview badge
+        val (badgeRes, iconRes, tintRes) = styleForPreview(file)
+        view.findViewById<View>(R.id.previewBadge).setBackgroundResource(badgeRes)
+        val previewIcon = view.findViewById<ImageView>(R.id.previewIcon)
+        previewIcon.setImageResource(iconRes)
+        previewIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(this, tintRes)
+        )
 
         view.findViewById<View>(R.id.btnOpen).setOnClickListener {
             openFile(file)
@@ -501,6 +624,34 @@ class MainActivity : AppCompatActivity() {
         dialog.setContentView(view)
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.show()
+    }
+
+    private fun styleForPreview(file: File): Triple<Int, Int, Int> {
+        if (file.name.endsWith(".locked")) {
+            return Triple(R.drawable.bg_badge_locked, R.drawable.ic_file_locked, R.color.file_locked)
+        }
+        if (file.isDirectory) {
+            return Triple(R.drawable.bg_badge_folder, R.drawable.ic_file_folder, R.color.file_folder)
+        }
+        val ext = file.extension.lowercase()
+        return when {
+            ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp") ->
+                Triple(R.drawable.bg_badge_image, R.drawable.ic_file_image, R.color.file_image)
+            ext in listOf("mp4", "mkv", "avi", "mov", "webm", "flv") ->
+                Triple(R.drawable.bg_badge_video, R.drawable.ic_file_video, R.color.file_video)
+            ext in listOf("mp3", "wav", "flac", "aac", "ogg", "m4a", "wma") ->
+                Triple(R.drawable.bg_badge_audio, R.drawable.ic_file_audio, R.color.file_audio)
+            ext in listOf("pdf", "doc", "docx", "txt", "rtf", "odt", "epub", "log", "conf", "prop", "md", "csv", "xls", "xlsx", "ppt", "pptx") ->
+                Triple(R.drawable.bg_badge_document, R.drawable.ic_file_document, R.color.file_document)
+            ext in listOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz") ->
+                Triple(R.drawable.bg_badge_archive, R.drawable.ic_file_archive, R.color.file_archive)
+            ext in listOf("kt", "java", "py", "js", "ts", "jsx", "tsx", "c", "cpp", "h", "hpp", "cs", "rb", "go", "rs", "swift", "sh", "html", "css", "scss", "json", "xml", "yml", "yaml") ->
+                Triple(R.drawable.bg_badge_code, R.drawable.ic_file_code, R.color.file_code)
+            ext == "apk" ->
+                Triple(R.drawable.bg_badge_apk, R.drawable.ic_file_apk, R.color.file_apk)
+            else ->
+                Triple(R.drawable.bg_badge_generic, R.drawable.ic_file_generic, R.color.file_generic)
+        }
     }
 
     private fun shareSingleFile(file: File) {
@@ -726,24 +877,32 @@ class MainActivity : AppCompatActivity() {
         val availableStr = Formatter.formatShortFileSize(this, availableSize)
 
         binding.storageText.text = "$availableStr free of $totalStr"
-        val progress = ((usedSize.toDouble() / totalSize.toDouble()) * 100).toInt().coerceIn(0, 100)
-        binding.storageProgress.setProgressCompat(progress, true)
 
-        calculateCategorySizes(path)
+        calculateCategorySizes(path, totalSize)
     }
 
-    private fun calculateCategorySizes(root: File) {
+    private fun calculateCategorySizes(root: File, totalSize: Long) {
         lifecycleScope.launch(Dispatchers.IO) {
             var imageSize = 0L
             var videoSize = 0L
             var audioSize = 0L
+            var docSize = 0L
+            var archiveSize = 0L
+            var apkSize = 0L
+            var otherSize = 0L
 
             root.walkTopDown().maxDepth(3).forEach { file ->
                 if (file.isFile) {
-                    when (file.extension.lowercase()) {
-                        "jpg", "jpeg", "png", "webp", "gif" -> imageSize += file.length()
-                        "mp4", "mkv", "avi", "mov", "webm" -> videoSize += file.length()
-                        "mp3", "wav", "flac", "aac", "ogg" -> audioSize += file.length()
+                    val ext = file.extension.lowercase()
+                    val len = file.length()
+                    when {
+                        ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp") -> imageSize += len
+                        ext in listOf("mp4", "mkv", "avi", "mov", "webm", "flv") -> videoSize += len
+                        ext in listOf("mp3", "wav", "flac", "aac", "ogg", "m4a", "wma") -> audioSize += len
+                        ext in listOf("pdf", "doc", "docx", "txt", "rtf", "odt", "epub", "log", "conf", "prop", "md", "csv", "xls", "xlsx", "ppt", "pptx") -> docSize += len
+                        ext in listOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz") -> archiveSize += len
+                        ext == "apk" -> apkSize += len
+                        else -> otherSize += len
                     }
                 }
             }
@@ -752,8 +911,36 @@ class MainActivity : AppCompatActivity() {
                 binding.imageSizeText.text = Formatter.formatShortFileSize(this@MainActivity, imageSize)
                 binding.videoSizeText.text = Formatter.formatShortFileSize(this@MainActivity, videoSize)
                 binding.audioSizeText.text = Formatter.formatShortFileSize(this@MainActivity, audioSize)
+                updateStorageBar(totalSize, imageSize, videoSize, audioSize, docSize, archiveSize, apkSize, otherSize)
             }
         }
+    }
+
+    private fun updateStorageBar(
+        totalSize: Long,
+        imageSize: Long,
+        videoSize: Long,
+        audioSize: Long,
+        docSize: Long,
+        archiveSize: Long,
+        otherSize: Long
+    ) {
+        // Compute weights as percentages of TOTAL storage (not just used),
+        // so the user sees both the breakdown AND the headroom.
+        val total = totalSize.coerceAtLeast(1L).toFloat()
+        val imgW = imageSize / total * 100f
+        val vidW = videoSize / total * 100f
+        val audW = audioSize / total * 100f
+        val docW = docSize / total * 100f
+        val arcW = archiveSize / total * 100f
+        val otherW = 100f - (imgW + vidW + audW + docW + arcW).coerceAtMost(100f)
+
+        binding.segImage.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = imgW.coerceAtLeast(0f) }
+        binding.segVideo.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = vidW.coerceAtLeast(0f) }
+        binding.segAudio.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = audW.coerceAtLeast(0f) }
+        binding.segDocs.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = docW.coerceAtLeast(0f) }
+        binding.segArchive.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = arcW.coerceAtLeast(0f) }
+        binding.segOther.updateLayoutParams<android.widget.LinearLayout.LayoutParams> { weight = otherW.coerceAtLeast(0f) }
     }
 
     private fun checkPermissionsAndLoadFiles() {

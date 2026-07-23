@@ -17,32 +17,68 @@
         android:layout_marginBottom="16dp"
         android:background="@drawable/bg_drag_handle_oval" />
 
-    <TextView
-        android:id="@+id/actionTitle"
+    <!-- ===== PREVIEW HEADER ===== -->
+    <LinearLayout
+        android:id="@+id/previewHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="middle"
-        android:fontFamily="sans-serif-medium"
-        android:letterSpacing="-0.01"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingHorizontal="12dp"
-        android:singleLine="true"
-        android:text="File Options"
-        android:textColor="?attr/colorOnSurface"
-        android:textSize="20sp" />
+        android:paddingVertical="8dp">
 
-    <TextView
-        android:id="@+id/actionSubtitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:ellipsize="end"
-        android:fontFamily="sans-serif"
-        android:letterSpacing="0.01"
-        android:maxLines="1"
-        android:paddingHorizontal="12dp"
-        android:text="File details"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="13sp" />
+        <FrameLayout
+            android:layout_width="56dp"
+            android:layout_height="56dp">
+
+            <View
+                android:id="@+id/previewBadge"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_badge_folder" />
+
+            <ImageView
+                android:id="@+id/previewIcon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_file_folder"
+                app:tint="@color/file_folder" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/actionTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                android:singleLine="true"
+                android:text="File Options"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/actionSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:letterSpacing="0.01"
+                android:maxLines="1"
+                android:text="File details"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
 
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"

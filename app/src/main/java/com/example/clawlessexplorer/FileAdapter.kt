@@ -30,8 +30,29 @@ class FileAdapter(
     private var filteredFiles: List<File> = allFiles
     private val selectedFiles = mutableSetOf<File>()
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    private var searchQuery: String = ""
+    private var typeFilter: TypeFilter = TypeFilter.ALL
     var isSelectionMode = false
         private set
+
+    enum class TypeFilter {
+        ALL, IMAGE, VIDEO, AUDIO, DOCUMENT, ARCHIVE, APK;
+
+        fun matches(file: File): Boolean {
+            if (this == ALL) return true
+            if (file.isDirectory) return false
+            val ext = file.extension.lowercase()
+            return when (this) {
+                IMAGE -> ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp")
+                VIDEO -> ext in listOf("mp4", "mkv", "avi", "mov", "webm", "flv")
+                AUDIO -> ext in listOf("mp3", "wav", "flac", "aac", "ogg", "m4a", "wma")
+                DOCUMENT -> ext in listOf("pdf", "doc", "docx", "txt", "rtf", "odt", "epub", "log", "conf", "prop", "md", "csv", "xls", "xlsx", "ppt", "pptx")
+                ARCHIVE -> ext in listOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz")
+                APK -> ext == "apk"
+                ALL -> true
+            }
+        }
+    }
 
     /** File type → (iconRes, badgeBgRes, accentColorRes) */
     private data class FileTypeStyle(
@@ -196,16 +217,10 @@ class FileAdapter(
     }
 
     fun updateFiles(newFiles: List<File>) {
-        val diffCallback = FileDiffCallback(filteredFiles, newFiles)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-
         allFiles = newFiles
-        filteredFiles = newFiles
         selectedFiles.clear()
         isSelectionMode = false
-
-        // Reset animation flag on holder creation
-        diffResult.dispatchUpdatesTo(this)
+        applyFilters()
     }
 
     class FileDiffCallback(
@@ -221,11 +236,22 @@ class FileAdapter(
     }
 
     fun filter(query: String) {
-        filteredFiles = if (query.isEmpty()) {
-            allFiles
-        } else {
-            allFiles.filter { it.name.contains(query, ignoreCase = true) }
-        }
+        searchQuery = query
+        applyFilters()
+    }
+
+    fun setTypeFilter(filter: TypeFilter) {
+        typeFilter = filter
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        filteredFiles = allFiles
+            .filter { typeFilter.matches(it) }
+            .filter {
+                if (searchQuery.isEmpty()) true
+                else it.name.contains(searchQuery, ignoreCase = true)
+            }
         notifyDataSetChanged()
     }
 }
