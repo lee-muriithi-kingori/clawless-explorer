@@ -28,7 +28,9 @@
 
         <FrameLayout
             android:layout_width="48dp"
-            android:layout_height="48dp">
+            android:layout_height="48dp"
+            android:clipChildren="true"
+            android:clipToOutline="true">
 
             <View
                 android:id="@+id/badgeBackground"
@@ -43,6 +45,13 @@
                 android:layout_gravity="center"
                 android:src="@drawable/ic_file_folder"
                 app:tint="@color/file_folder" />
+
+            <ImageView
+                android:id="@+id/fileThumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
         </FrameLayout>
 
         <LinearLayout

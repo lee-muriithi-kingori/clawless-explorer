@@ -16,6 +16,8 @@ import android.text.format.Formatter
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: FileAdapter
+    private lateinit var settings: SettingsManager
     private var currentPath: File = Environment.getExternalStorageDirectory()
     private var showHiddenFiles: Boolean = true
     private var fileServer: FileServer? = null
@@ -55,10 +58,22 @@ class MainActivity : AppCompatActivity() {
     enum class SortType { NAME, DATE, SIZE }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply persisted theme BEFORE super.onCreate so the inflate picks it up.
+        settings = SettingsManager(this)
+        settings.applyTheme()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Apply persisted defaults
+        sortType = when (settings.defaultSort) {
+            SettingsManager.SortPref.NAME -> SortType.NAME
+            SettingsManager.SortPref.DATE -> SortType.DATE
+            SettingsManager.SortPref.SIZE -> SortType.SIZE
+        }
+        showHiddenFiles = settings.showHiddenByDefault
 
         setupEdgeToEdge()
         setupToolbar()
@@ -74,10 +89,12 @@ class MainActivity : AppCompatActivity() {
         setupFabScrollBehavior()
         updateStorageInfo()
         checkPermissionsAndLoadFiles()
-        startFileServer()
+        if (settings.serverEnabled) startFileServer()
 
         binding.tvTypewriter.setCharacterDelay(100)
         binding.tvTypewriter.animateText("Clawless Explorer")
+
+        handleIntentExtras(intent)
     }
 
     private fun startFileServer() {
@@ -132,11 +149,17 @@ class MainActivity : AppCompatActivity() {
         binding.btnSearch.setOnClickListener {
             toggleSearch()
         }
+        binding.btnSettings.setOnClickListener {
+            showSettingsSheet()
+        }
     }
 
     private fun setupDrawer() {
         binding.navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
+                R.id.nav_recent -> {
+                    startActivity(Intent(this, RecentsActivity::class.java))
+                }
                 R.id.nav_home -> navigateTo(Environment.getExternalStorageDirectory())
                 R.id.nav_root -> navigateTo(File("/"))
                 R.id.nav_sdcard -> {
@@ -458,6 +481,98 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntentExtras(intent)
+    }
+
+    private fun handleIntentExtras(intent: Intent?) {
+        val path = intent?.getStringExtra(RecentsActivity.EXTRA_OPEN_PATH) ?: return
+        val file = File(path)
+        if (file.exists()) {
+            if (file.isDirectory) {
+                navigateTo(file)
+            } else {
+                navigateTo(file.parentFile ?: currentPath)
+            }
+        }
+    }
+
+    private fun showSettingsSheet() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet_settings, null)
+
+        // Theme radios
+        when (settings.themeMode) {
+            SettingsManager.ThemeMode.SYSTEM -> view.findViewById<RadioButton>(R.id.themeSystem).isChecked = true
+            SettingsManager.ThemeMode.LIGHT -> view.findViewById<RadioButton>(R.id.themeLight).isChecked = true
+            SettingsManager.ThemeMode.DARK -> view.findViewById<RadioButton>(R.id.themeDark).isChecked = true
+        }
+        view.findViewById<RadioGroup>(R.id.themeGroup).setOnCheckedChangeListener { _, checkedId ->
+            val mode = when (checkedId) {
+                R.id.themeLight -> SettingsManager.ThemeMode.LIGHT
+                R.id.themeDark -> SettingsManager.ThemeMode.DARK
+                else -> SettingsManager.ThemeMode.SYSTEM
+            }
+            settings.themeMode = mode
+            settings.applyTheme()
+        }
+
+        // Sort radios
+        when (settings.defaultSort) {
+            SettingsManager.SortPref.NAME -> view.findViewById<RadioButton>(R.id.sortName).isChecked = true
+            SettingsManager.SortPref.DATE -> view.findViewById<RadioButton>(R.id.sortDate).isChecked = true
+            SettingsManager.SortPref.SIZE -> view.findViewById<RadioButton>(R.id.sortSize).isChecked = true
+        }
+        view.findViewById<RadioGroup>(R.id.sortGroup).setOnCheckedChangeListener { _, checkedId ->
+            val pref = when (checkedId) {
+                R.id.sortDate -> SettingsManager.SortPref.DATE
+                R.id.sortSize -> SettingsManager.SortPref.SIZE
+                else -> SettingsManager.SortPref.NAME
+            }
+            settings.defaultSort = pref
+            sortType = when (pref) {
+                SettingsManager.SortPref.NAME -> SortType.NAME
+                SettingsManager.SortPref.DATE -> SortType.DATE
+                SettingsManager.SortPref.SIZE -> SortType.SIZE
+            }
+            loadFiles(currentPath)
+        }
+
+        // Hidden switch
+        val switchHidden = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchHidden)
+        switchHidden.isChecked = settings.showHiddenByDefault
+        switchHidden.setOnCheckedChangeListener { _, isChecked ->
+            settings.showHiddenByDefault = isChecked
+            showHiddenFiles = isChecked
+            loadFiles(currentPath)
+        }
+
+        // Server switch
+        val switchServer = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchServer)
+        switchServer.isChecked = settings.serverEnabled
+        switchServer.setOnCheckedChangeListener { _, isChecked ->
+            settings.serverEnabled = isChecked
+            if (isChecked) {
+                startFileServer()
+            } else {
+                fileServer?.stop()
+                fileServer = null
+            }
+        }
+
+        // Clear recents
+        view.findViewById<View>(R.id.btnClearRecents).setOnClickListener {
+            settings.clearRecents()
+            Toast.makeText(this, "Recent files cleared", Toast.LENGTH_SHORT).show()
+        }
+
+        dialog.setContentView(view)
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.show()
+    }
+
     private fun showCreateOptions() {
         val options = arrayOf("New Folder", "New File")
         MaterialAlertDialogBuilder(this)
@@ -664,6 +779,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openFile(file: File) {
+        settings.addRecent(file.absolutePath)
         val extension = file.extension.lowercase()
         if (extension in listOf("txt", "log", "conf", "xml", "json", "sh", "prop", "md", "kt", "java", "py", "yml", "yaml", "html", "css", "js")) {
             showTextFileViewer(file)
@@ -813,6 +929,7 @@ class MainActivity : AppCompatActivity() {
         currentPath = directory
         loadFiles(directory)
         updateBreadcrumbs(directory)
+        settings.addRecent(directory.absolutePath)
     }
 
     private fun updateBreadcrumbs(directory: File) {

@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.google.android.material.card.MaterialCardView
 import java.io.File
 import java.text.SimpleDateFormat
@@ -63,6 +64,7 @@ class FileAdapter(
         val card: MaterialCardView = view as MaterialCardView
         val badgeBackground: View = view.findViewById(R.id.badgeBackground)
         val icon: ImageView = view.findViewById(R.id.fileIcon)
+        val thumbnail: ImageView = view.findViewById(R.id.fileThumbnail)
         val name: TextView = view.findViewById(R.id.fileName)
         val meta: TextView = view.findViewById(R.id.fileMeta)
         val lockBadge: ImageView = view.findViewById(R.id.lockBadge)
@@ -87,11 +89,29 @@ class FileAdapter(
 
         // Determine file type → style
         val style = styleFor(file, ctx)
-        holder.badgeBackground.setBackgroundResource(style.badgeRes)
-        holder.icon.setImageResource(style.iconRes)
-        holder.icon.imageTintList = ColorStateList.valueOf(
-            ContextCompat.getColor(ctx, style.accentRes)
-        )
+        val isImage = !file.isDirectory &&
+            file.extension.lowercase() in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp")
+
+        if (isImage) {
+            // Show the actual image as a 48dp thumbnail
+            holder.badgeBackground.visibility = View.GONE
+            holder.icon.visibility = View.GONE
+            holder.thumbnail.visibility = View.VISIBLE
+            holder.thumbnail.load(file) {
+                crossfade(true)
+                placeholder(R.drawable.bg_badge_image)
+                error(R.drawable.ic_file_image)
+            }
+        } else {
+            holder.badgeBackground.visibility = View.VISIBLE
+            holder.icon.visibility = View.VISIBLE
+            holder.thumbnail.visibility = View.GONE
+            holder.badgeBackground.setBackgroundResource(style.badgeRes)
+            holder.icon.setImageResource(style.iconRes)
+            holder.icon.imageTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(ctx, style.accentRes)
+            )
+        }
 
         // Meta line
         val dateStr = dateFormat.format(Date(file.lastModified()))

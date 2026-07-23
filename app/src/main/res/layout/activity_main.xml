@@ -74,6 +74,17 @@
                             android:textStyle="bold" />
 
                         <ImageButton
+                            android:id="@+id/btnSettings"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@+id/btnSearch"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Settings"
+                            android:src="@drawable/ic_settings"
+                            app:tint="#FFFFFF" />
+
+                        <ImageButton
                             android:id="@+id/btnSearch"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
