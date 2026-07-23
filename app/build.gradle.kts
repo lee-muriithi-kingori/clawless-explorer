@@ -55,7 +55,6 @@ dependencies {
     implementation(libs.androidx.swiperefresh)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
-    implementation(libs.coil)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
