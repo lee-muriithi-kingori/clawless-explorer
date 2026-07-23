@@ -3,3 +3,8 @@
 /local.properties
 /.idea/
 /build
+/app/build
+/app/release
+*.apk
+*.aab
+.kotlin/

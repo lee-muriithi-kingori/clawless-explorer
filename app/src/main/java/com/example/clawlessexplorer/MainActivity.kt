@@ -721,25 +721,6 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.getColor(this, tintRes)
         )
 
-        view.findViewById<TextView>(R.id.actionTitle).text = file.name
-        view.findViewById<TextView>(R.id.actionSubtitle).text = if (file.isDirectory) {
-            val count = try { file.list()?.size ?: 0 } catch (e: Exception) { 0 }
-            "$count items · Folder"
-        } else {
-            val sizeStr = Formatter.formatShortFileSize(this, file.length())
-            val ext = file.extension.uppercase().ifEmpty { "FILE" }
-            "$sizeStr · ${ext} file"
-        }
-
-        // Populate the preview badge
-        val (badgeRes, iconRes, tintRes) = styleForPreview(file)
-        view.findViewById<View>(R.id.previewBadge).setBackgroundResource(badgeRes)
-        val previewIcon = view.findViewById<ImageView>(R.id.previewIcon)
-        previewIcon.setImageResource(iconRes)
-        previewIcon.imageTintList = android.content.res.ColorStateList.valueOf(
-            ContextCompat.getColor(this, tintRes)
-        )
-
         view.findViewById<View>(R.id.btnOpen).setOnClickListener {
             openFile(file)
             dialog.dismiss()
@@ -1224,7 +1205,7 @@ class MainActivity : AppCompatActivity() {
                 binding.imageSizeText.text = Formatter.formatShortFileSize(this@MainActivity, imageSize)
                 binding.videoSizeText.text = Formatter.formatShortFileSize(this@MainActivity, videoSize)
                 binding.audioSizeText.text = Formatter.formatShortFileSize(this@MainActivity, audioSize)
-                updateStorageBar(totalSize, imageSize, videoSize, audioSize, docSize, archiveSize, apkSize, otherSize)
+                updateStorageBar(totalSize, imageSize, videoSize, audioSize, docSize, archiveSize + apkSize, otherSize)
             }
         }
     }

@@ -9,12 +9,10 @@
     android:clickable="true"
     android:focusable="true"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:checkable="true"
     app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
     app:checkedIcon="@drawable/ic_check"
     app:checkedIconTint="?attr/colorOnPrimary"
-    app:checkedIconGravity="center"
     app:rippleColor="?attr/colorControlHighlight"
     app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">

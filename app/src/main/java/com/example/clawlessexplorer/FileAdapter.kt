@@ -69,6 +69,12 @@ class FileAdapter(
         val meta: TextView = view.findViewById(R.id.fileMeta)
         val lockBadge: ImageView = view.findViewById(R.id.lockBadge)
         val moreIcon: ImageView = view.findViewById(R.id.moreIcon)
+
+        init {
+            // app:checkable isn't a valid attribute on this Material lib version,
+            // so we enable it programmatically.
+            card.isCheckable = true
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
