@@ -30,6 +30,12 @@
             android:label="Recent Files"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".HtmlViewerActivity"
+            android:exported="false"
+            android:label="HTML Viewer"
+            android:parentActivityName=".MainActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

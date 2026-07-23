@@ -98,8 +98,63 @@
                     </RelativeLayout>
                 </androidx.appcompat.widget.Toolbar>
 
-                <!-- ===== GLASS STORAGE DASHBOARD ===== -->
+                <!-- ===== STORAGE: COMPACT PILL (visible when collapsed) ===== -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/storagePill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="999dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#33FFFFFF"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_glass_hero"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="10dp">
+
+                        <View
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/bg_badge_circle"
+                            android:backgroundTint="#00C8B4" />
+
+                        <TextView
+                            android:id="@+id/storagePillLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="10dp"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="-0.01"
+                            android:maxLines="1"
+                            android:text="Internal · 38.4 GB free"
+                            android:textColor="#FFFFFF"
+                            android:textSize="13sp" />
+
+                        <ImageView
+                            android:id="@+id/storagePillChevron"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginStart="6dp"
+                            android:src="@drawable/ic_chevron_right"
+                            android:rotation="90"
+                            app:tint="#FFFFFF" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ===== GLASS STORAGE DASHBOARD (visible when expanded) ===== -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/storageCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
@@ -142,6 +197,15 @@
                                 android:text="Loading..."
                                 android:textColor="#E6FFFFFF"
                                 android:textSize="12sp" />
+
+                            <ImageView
+                                android:id="@+id/storageChevron"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginStart="6dp"
+                                android:src="@drawable/ic_chevron_right"
+                                android:rotation="-90"
+                                app:tint="#FFFFFF" />
                         </LinearLayout>
 
                         <TextView

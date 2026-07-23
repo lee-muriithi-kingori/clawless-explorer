@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         setupEdgeToEdge()
         setupToolbar()
+        setupStorageCard()
         setupHeaderButtons()
         setupDrawer()
         setupRecyclerView()
@@ -152,6 +153,57 @@ class MainActivity : AppCompatActivity() {
         binding.btnSettings.setOnClickListener {
             showSettingsSheet()
         }
+    }
+
+    private fun setupStorageCard() {
+        val collapsed = settings.storageCardCollapsed
+        binding.storageCard.visibility = if (collapsed) View.GONE else View.VISIBLE
+        binding.storagePill.visibility = if (collapsed) View.VISIBLE else View.GONE
+
+        binding.storageCard.setOnClickListener { toggleStorageCard() }
+        binding.storagePill.setOnClickListener { toggleStorageCard() }
+    }
+
+    private fun toggleStorageCard() {
+        val collapse = binding.storageCard.visibility == View.VISIBLE
+        val expand = !collapse
+
+        if (collapse) {
+            // Collapse: animate card out, pill in
+            val cardAnim = binding.storageCard.animate()
+                .alpha(0f)
+                .scaleY(0.9f)
+                .setDuration(180L)
+                .withEndAction { binding.storageCard.visibility = View.GONE }
+            val pillAnim = binding.storagePill.animate()
+                .alpha(1f)
+                .scaleY(1f)
+                .setDuration(220L)
+            binding.storagePill.alpha = 0f
+            binding.storagePill.scaleY = 0.9f
+            binding.storagePill.visibility = View.VISIBLE
+            pillAnim.start()
+            cardAnim.start()
+            binding.storageChevron.animate().rotation(90f).setDuration(180L).start()
+        } else {
+            // Expand
+            binding.storagePill.animate()
+                .alpha(0f)
+                .scaleY(0.9f)
+                .setDuration(160L)
+                .withEndAction { binding.storagePill.visibility = View.GONE }
+                .start()
+            binding.storageCard.alpha = 0f
+            binding.storageCard.scaleY = 0.9f
+            binding.storageCard.visibility = View.VISIBLE
+            binding.storageCard.animate()
+                .alpha(1f)
+                .scaleY(1f)
+                .setDuration(220L)
+                .start()
+            binding.storageChevron.animate().rotation(-90f).setDuration(180L).start()
+        }
+        settings.storageCardCollapsed = expand
     }
 
     private fun setupDrawer() {
@@ -703,7 +755,14 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Delete File?")
                 .setMessage("Are you sure you want to delete ${file.name}?")
                 .setPositiveButton("Delete") { _, _ ->
-                    if (file.delete()) {
+                    if (file.deleteRecursively()) {
+                        val snack = com.google.android.material.snackbar.Snackbar.make(
+                            binding.root,
+                            "Deleted ${file.name}",
+                            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                        )
+                        snack.anchorView = binding.fabAdd
+                        snack.show()
                         loadFiles(currentPath)
                         updateStorageInfo()
                     }
@@ -733,6 +792,28 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             btnShare.visibility = View.GONE
+        }
+
+        view.findViewById<View>(R.id.btnCopy).setOnClickListener {
+            showCopyMoveDialog(file, isMove = false)
+            dialog.dismiss()
+        }
+
+        view.findViewById<View>(R.id.btnMove).setOnClickListener {
+            showCopyMoveDialog(file, isMove = true)
+            dialog.dismiss()
+        }
+
+        // "View" only makes sense for HTML files
+        val btnView = view.findViewById<View>(R.id.btnView)
+        if (!file.isDirectory && file.extension.lowercase() in listOf("html", "htm")) {
+            btnView.visibility = View.VISIBLE
+            btnView.setOnClickListener {
+                startActivity(HtmlViewerActivity.intent(this, file.absolutePath))
+                dialog.dismiss()
+            }
+        } else {
+            btnView.visibility = View.GONE
         }
 
         dialog.setContentView(view)
@@ -776,6 +857,121 @@ class MainActivity : AppCompatActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent, "Share ${file.name}"))
+    }
+
+    private fun showCopyMoveDialog(file: File, isMove: Boolean) {
+        val action = if (isMove) "Move" else "Copy"
+        val input = TextInputEditText(this).apply {
+            setText(currentPath.absolutePath)
+            setHint("Destination folder")
+            setSelection(text?.length ?: 0)
+        }
+        val container = android.widget.FrameLayout(this)
+        val params = android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(48, 16, 48, 16)
+        input.layoutParams = params
+        container.addView(input)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("$action \"${file.name}\" to…")
+            .setView(container)
+            .setPositiveButton(action) { _, _ ->
+                val dest = File(input.text.toString().trim())
+                if (!dest.exists() || !dest.isDirectory) {
+                    Toast.makeText(this, "Destination is not a folder", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                val target = File(dest, file.name)
+                if (target.exists()) {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle("Already exists")
+                        .setMessage("${file.name} already exists at the destination. Overwrite?")
+                        .setPositiveButton("Overwrite") { _, _ ->
+                            performCopyMove(file, dest, isMove, overwrite = true)
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                } else {
+                    performCopyMove(file, dest, isMove, overwrite = false)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performCopyMove(source: File, destDir: File, isMove: Boolean, overwrite: Boolean) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    val target = File(destDir, source.name)
+                    if (isMove) {
+                        if (overwrite && target.exists()) target.delete()
+                        if (source.renameTo(target)) Result.success(target)
+                        else Result.failure(IllegalStateException("Move failed"))
+                    } else {
+                        if (overwrite && target.exists()) target.delete()
+                        if (copyRecursively(source, target)) Result.success(target)
+                        else Result.failure(IllegalStateException("Copy failed"))
+                    }
+                } catch (e: Exception) {
+                    Result.failure(e)
+                }
+            }
+            withContext(Dispatchers.Main) {
+                result.onSuccess { target ->
+                    val action = if (isMove) "Moved" else "Copied"
+                    val snack = com.google.android.material.snackbar.Snackbar.make(
+                        binding.root,
+                        "$action ${source.name} → ${destDir.name}",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                    )
+                    if (isMove) {
+                        // Undo: move it back to the original location.
+                        snack.setAction("Undo") {
+                            val newPath = File(source.parentFile ?: currentPath, target.name)
+                            target.renameTo(newPath)
+                            loadFiles(currentPath)
+                            updateStorageInfo()
+                        }
+                    }
+                    snack.anchorView = binding.fabAdd
+                    snack.show()
+                    loadFiles(currentPath)
+                    updateStorageInfo()
+                }.onFailure {
+                    com.google.android.material.snackbar.Snackbar.make(
+                        binding.root,
+                        "Failed: ${it.message}",
+                        com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                    ).apply {
+                        anchorView = binding.fabAdd
+                        show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun copyRecursively(src: File, dst: File): Boolean {
+        if (src.isDirectory) {
+            if (!dst.exists() && !dst.mkdirs()) return false
+            src.listFiles()?.forEach { child ->
+                if (!copyRecursively(child, File(dst, child.name))) return false
+            }
+            return true
+        } else {
+            return try {
+                src.inputStream().use { input ->
+                    dst.outputStream().use { output -> input.copyTo(output) }
+                }
+                true
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 
     private fun openFile(file: File) {
@@ -993,6 +1189,7 @@ class MainActivity : AppCompatActivity() {
         val availableStr = Formatter.formatShortFileSize(this, availableSize)
 
         binding.storageText.text = "$availableStr free of $totalStr"
+        binding.storagePillLabel.text = "Internal · $availableStr free of $totalStr"
 
         calculateCategorySizes(path, totalSize)
     }

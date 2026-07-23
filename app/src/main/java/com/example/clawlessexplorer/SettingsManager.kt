@@ -42,6 +42,10 @@ class SettingsManager(context: Context) {
         get() = prefs.getBoolean(KEY_SERVER, true)
         set(value) = prefs.edit().putBoolean(KEY_SERVER, value).apply()
 
+    var storageCardCollapsed: Boolean
+        get() = prefs.getBoolean(KEY_STORAGE_COLLAPSED, false)
+        set(value) = prefs.edit().putBoolean(KEY_STORAGE_COLLAPSED, value).apply()
+
     // ============ Recents ============
 
     /**
@@ -110,6 +114,7 @@ class SettingsManager(context: Context) {
         private const val KEY_HIDDEN = "show_hidden_default"
         private const val KEY_SERVER = "server_enabled"
         private const val KEY_RECENTS = "recents_json"
+        private const val KEY_STORAGE_COLLAPSED = "storage_card_collapsed"
         const val MAX_RECENTS = 20
     }
 }
