@@ -2,13 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="Search"
-        app:showAsAction="ifRoom" />
-    <item
         android:id="@+id/action_sort"
-        android:icon="@android:drawable/ic_menu_sort_alphabetically"
+        android:icon="@drawable/ic_sort"
         android:title="Sort"
         app:showAsAction="ifRoom">
         <menu>
@@ -25,17 +20,18 @@
     </item>
     <item
         android:id="@+id/action_show_hidden"
+        android:icon="@drawable/ic_visibility"
         android:title="Show Hidden Files"
         android:checkable="true"
         android:checked="true"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_refresh"
+        android:title="Refresh"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_go_to_root"
         android:title="Go to Root (/)"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_refresh"
-        android:icon="@android:drawable/ic_menu_rotate"
-        android:title="Refresh"
         app:showAsAction="never" />
 </menu>

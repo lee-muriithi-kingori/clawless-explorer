@@ -1,19 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorSurfaceContainer"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.04"
+        android:text="CONTENT"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="11sp" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="320dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_glass_card"
+        android:fadeScrollbars="false"
+        android:padding="16dp"
+        android:scrollbarStyle="outsideInset"
+        android:scrollbarThumbVertical="@drawable/bg_badge_circle"
+        android:scrollbarSize="6dp">
 
         <TextView
             android:id="@+id/textContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+            android:lineSpacingExtra="3sp"
+            android:textColor="?attr/colorOnSurface"
+            android:textIsSelectable="true"
+            android:textSize="13sp" />
     </ScrollView>
 </LinearLayout>

@@ -22,19 +22,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.clawlessexplorer.databinding.ActivityMainBinding
 import com.example.clawlessexplorer.server.FileServer
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
-import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,7 +49,6 @@ class MainActivity : AppCompatActivity() {
     private var currentPath: File = Environment.getExternalStorageDirectory()
     private var showHiddenFiles: Boolean = true
     private var fileServer: FileServer? = null
-
     private var sortType: SortType = SortType.NAME
 
     enum class SortType { NAME, DATE, SIZE }
@@ -60,15 +61,17 @@ class MainActivity : AppCompatActivity() {
 
         setupEdgeToEdge()
         setupToolbar()
+        setupHeaderButtons()
         setupDrawer()
         setupRecyclerView()
         setupListeners()
         setupSearch()
         setupBackPress()
+        setupFabScrollBehavior()
         updateStorageInfo()
         checkPermissionsAndLoadFiles()
         startFileServer()
-        
+
         binding.tvTypewriter.setCharacterDelay(100)
         binding.tvTypewriter.animateText("Clawless Explorer")
     }
@@ -76,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     private fun startFileServer() {
         fileServer = FileServer(Environment.getExternalStorageDirectory())
         fileServer?.start()
-        // Server status hidden from UI
+        // Server status hidden from UI by design.
     }
 
     override fun onDestroy() {
@@ -87,20 +90,25 @@ class MainActivity : AppCompatActivity() {
     private fun setupBackPress() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    binding.drawerLayout.closeDrawer(GravityCompat.START)
-                } else if (adapter.isSelectionMode) {
-                    adapter.clearSelection()
-                    resetToolbar()
-                } else if (binding.searchLayout.visibility == View.VISIBLE) {
-                    toggleSearch()
-                } else {
-                    val root = Environment.getExternalStorageDirectory()
-                    if (currentPath.absolutePath != root.absolutePath && currentPath.parentFile != null) {
-                        navigateTo(currentPath.parentFile!!)
-                    } else {
-                        isEnabled = false
-                        onBackPressedDispatcher.onBackPressed()
+                when {
+                    binding.drawerLayout.isDrawerOpen(GravityCompat.START) -> {
+                        binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    }
+                    adapter.isSelectionMode -> {
+                        adapter.clearSelection()
+                        resetToolbar()
+                    }
+                    binding.searchLayout.visibility == View.VISIBLE -> {
+                        toggleSearch()
+                    }
+                    else -> {
+                        val root = Environment.getExternalStorageDirectory()
+                        if (currentPath.absolutePath != root.absolutePath && currentPath.parentFile != null) {
+                            navigateTo(currentPath.parentFile!!)
+                        } else {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
                     }
                 }
             }
@@ -110,9 +118,15 @@ class MainActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        binding.toolbar.setNavigationIcon(R.drawable.ic_menu)
-        binding.toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener(null)
+    }
+
+    private fun setupHeaderButtons() {
+        binding.btnMenu.setOnClickListener {
             binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+        binding.btnSearch.setOnClickListener {
+            toggleSearch()
         }
     }
 
@@ -141,18 +155,23 @@ class MainActivity : AppCompatActivity() {
     private fun setupEdgeToEdge() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.drawerLayout) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            
-            // Apply top padding to the AppBarLayout so it doesn't overlap the status bar
+            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
             binding.appBarLayout.updateLayoutParams<ViewGroup.MarginLayoutParams> {
                 topMargin = systemBars.top
             }
-            
-            // Adjust FAB margin for navigation bar
-            val navigationBars = insets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
             binding.fabAdd.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                bottomMargin = navigationBars.bottom + 24.toPx()
+                bottomMargin = navigationBars.bottom + 20.toPx()
             }
-            
+
+            binding.recyclerView.setPadding(
+                binding.recyclerView.paddingLeft,
+                binding.recyclerView.paddingTop,
+                binding.recyclerView.paddingRight,
+                navigationBars.bottom + 120.toPx()
+            )
+
             insets
         }
     }
@@ -172,6 +191,9 @@ class MainActivity : AppCompatActivity() {
             onItemLongClick = { _ ->
                 updateToolbarForSelection()
             },
+            onMoreClick = { file ->
+                showFileActions(file)
+            },
             onSelectionChanged = { count ->
                 if (count == 0) {
                     resetToolbar()
@@ -184,15 +206,31 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter = adapter
     }
 
+    /** Hide FAB on scroll down, show on scroll up — small modern touch. */
+    private fun setupFabScrollBehavior() {
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            private var dy = 0
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                this.dy += dy
+                if (dy > 4 && binding.fabAdd.isExtended) {
+                    binding.fabAdd.shrink()
+                } else if (dy < -4 && !binding.fabAdd.isExtended) {
+                    binding.fabAdd.extend()
+                }
+            }
+        })
+    }
+
     private fun updateToolbarForSelection() {
         if (binding.searchLayout.visibility == View.VISIBLE) toggleSearch()
         binding.toolbar.menu.clear()
         binding.toolbar.inflateMenu(R.menu.menu_selection)
-        binding.toolbar.setNavigationIcon(android.R.drawable.ic_menu_close_clear_cancel)
-        binding.toolbar.setNavigationOnClickListener {
+        binding.btnMenu.setImageResource(R.drawable.ic_close)
+        binding.btnMenu.setOnClickListener {
             adapter.clearSelection()
             resetToolbar()
         }
+        binding.btnSearch.visibility = View.GONE
     }
 
     private fun updateSelectionTitle(count: Int) {
@@ -203,66 +241,35 @@ class MainActivity : AppCompatActivity() {
         binding.tvTypewriter.animateText("Clawless Explorer")
         binding.toolbar.menu.clear()
         binding.toolbar.inflateMenu(R.menu.menu_main)
-        binding.toolbar.setNavigationIcon(null)
-        binding.toolbar.setNavigationOnClickListener(null)
+        binding.btnMenu.setImageResource(R.drawable.ic_menu)
+        binding.btnMenu.setOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
+        binding.btnSearch.visibility = View.VISIBLE
     }
 
     private fun setupListeners() {
-        binding.toolbar.inflateMenu(R.menu.menu_main)
         binding.toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.action_search -> {
-                    toggleSearch()
-                    true
-                }
-                R.id.action_delete -> {
-                    deleteSelectedFiles()
-                    true
-                }
-                R.id.action_share -> {
-                    shareSelectedFiles()
-                    true
-                }
-                R.id.action_refresh -> {
-                    loadFiles(currentPath)
-                    true
-                }
+                R.id.action_delete -> { deleteSelectedFiles(); true }
+                R.id.action_share -> { shareSelectedFiles(); true }
+                R.id.action_refresh -> { loadFiles(currentPath); true }
                 R.id.action_show_hidden -> {
                     it.isChecked = !it.isChecked
                     showHiddenFiles = it.isChecked
                     loadFiles(currentPath)
                     true
                 }
-                R.id.action_go_to_root -> {
-                    navigateTo(File("/"))
-                    true
-                }
-                R.id.sort_name -> {
-                    sortType = SortType.NAME
-                    loadFiles(currentPath)
-                    true
-                }
-                R.id.sort_date -> {
-                    sortType = SortType.DATE
-                    loadFiles(currentPath)
-                    true
-                }
-                R.id.sort_size -> {
-                    sortType = SortType.SIZE
-                    loadFiles(currentPath)
-                    true
-                }
-                R.id.action_select_all -> {
-                    adapter.selectAll()
-                    true
-                }
+                R.id.action_go_to_root -> { navigateTo(File("/")); true }
+                R.id.sort_name -> { sortType = SortType.NAME; loadFiles(currentPath); true }
+                R.id.sort_date -> { sortType = SortType.DATE; loadFiles(currentPath); true }
+                R.id.sort_size -> { sortType = SortType.SIZE; loadFiles(currentPath); true }
+                R.id.action_select_all -> { adapter.selectAll(); true }
                 else -> false
             }
         }
 
-        binding.fabAdd.setOnClickListener {
-            showCreateOptions()
-        }
+        binding.fabAdd.setOnClickListener { showCreateOptions() }
     }
 
     private fun toggleSearch() {
@@ -271,6 +278,13 @@ class MainActivity : AppCompatActivity() {
             binding.searchEditText.text?.clear()
         } else {
             binding.searchLayout.visibility = View.VISIBLE
+            binding.searchLayout.alpha = 0f
+            binding.searchLayout.translationY = -8f
+            binding.searchLayout.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(220L)
+                .start()
             binding.searchEditText.requestFocus()
         }
     }
@@ -279,7 +293,7 @@ class MainActivity : AppCompatActivity() {
         val selected = adapter.getSelectedFiles()
         MaterialAlertDialogBuilder(this)
             .setTitle("Delete ${selected.size} items?")
-            .setMessage("Are you sure you want to delete these files? This action cannot be undone.")
+            .setMessage("This action cannot be undone.")
             .setPositiveButton("Delete") { _, _ ->
                 selected.forEach { it.deleteRecursively() }
                 loadFiles(currentPath)
@@ -321,9 +335,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupSearch() {
-        binding.searchLayout.setEndIconOnClickListener {
-            startSpeechToText()
-        }
+        binding.searchLayout.setEndIconOnClickListener { startSpeechToText() }
         binding.searchEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -429,20 +441,27 @@ class MainActivity : AppCompatActivity() {
     private fun showFileActions(file: File) {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_file_actions, null)
-        
+
         view.findViewById<TextView>(R.id.actionTitle).text = file.name
-        
-        view.findViewById<MaterialButton>(R.id.btnOpen).setOnClickListener {
+        view.findViewById<TextView>(R.id.actionSubtitle).text = if (file.isDirectory) {
+            val count = try { file.list()?.size ?: 0 } catch (e: Exception) { 0 }
+            "$count items · Folder"
+        } else {
+            val sizeStr = Formatter.formatShortFileSize(this, file.length())
+            "$sizeStr · File"
+        }
+
+        view.findViewById<View>(R.id.btnOpen).setOnClickListener {
             openFile(file)
             dialog.dismiss()
         }
-        
-        view.findViewById<MaterialButton>(R.id.btnRename).setOnClickListener {
+
+        view.findViewById<View>(R.id.btnRename).setOnClickListener {
             showRenameDialog(file)
             dialog.dismiss()
         }
 
-        view.findViewById<MaterialButton>(R.id.btnDelete).setOnClickListener {
+        view.findViewById<View>(R.id.btnDelete).setOnClickListener {
             MaterialAlertDialogBuilder(this)
                 .setTitle("Delete File?")
                 .setMessage("Are you sure you want to delete ${file.name}?")
@@ -457,7 +476,7 @@ class MainActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
-        val btnLock = view.findViewById<MaterialButton>(R.id.btnLock)
+        val btnLock = view.findViewById<View>(R.id.btnLock)
         if (file.isDirectory) {
             btnLock.visibility = View.VISIBLE
             btnLock.setOnClickListener {
@@ -468,13 +487,35 @@ class MainActivity : AppCompatActivity() {
             btnLock.visibility = View.GONE
         }
 
+        val btnShare = view.findViewById<View>(R.id.btnShare)
+        if (!file.isDirectory) {
+            btnShare.visibility = View.VISIBLE
+            btnShare.setOnClickListener {
+                shareSingleFile(file)
+                dialog.dismiss()
+            }
+        } else {
+            btnShare.visibility = View.GONE
+        }
+
         dialog.setContentView(view)
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.show()
+    }
+
+    private fun shareSingleFile(file: File) {
+        val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = getMimeType(file)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Share ${file.name}"))
     }
 
     private fun openFile(file: File) {
         val extension = file.extension.lowercase()
-        if (extension in listOf("txt", "log", "conf", "xml", "json", "sh", "prop")) {
+        if (extension in listOf("txt", "log", "conf", "xml", "json", "sh", "prop", "md", "kt", "java", "py", "yml", "yaml", "html", "css", "js")) {
             showTextFileViewer(file)
         } else {
             try {
@@ -496,7 +537,6 @@ class MainActivity : AppCompatActivity() {
                 if (file.canRead()) {
                     file.readText()
                 } else {
-                    // Try reading as root
                     readTextAsRoot(file)
                 }
             } catch (e: Exception) {
@@ -506,7 +546,7 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 val view = layoutInflater.inflate(R.layout.dialog_text_viewer, null)
                 view.findViewById<TextView>(R.id.textContent).text = content
-                
+
                 MaterialAlertDialogBuilder(this@MainActivity)
                     .setTitle(file.name)
                     .setView(view)
@@ -528,7 +568,7 @@ class MainActivity : AppCompatActivity() {
     private fun getMimeType(file: File): String {
         val extension = file.extension.lowercase()
         return when (extension) {
-            "jpg", "jpeg", "png" -> "image/*"
+            "jpg", "jpeg", "png", "webp", "gif" -> "image/*"
             "pdf" -> "application/pdf"
             "txt" -> "text/plain"
             "mp4" -> "video/*"
@@ -569,8 +609,7 @@ class MainActivity : AppCompatActivity() {
     private fun lockFolder(folder: File, password: String) {
         val prefs = getSharedPreferences("folder_locks", MODE_PRIVATE)
         prefs.edit().putString(folder.absolutePath, password).apply()
-        
-        // Hide the folder by renaming it (adding .locked extension)
+
         val lockedFile = File(folder.parentFile, folder.name + ".locked")
         if (folder.renameTo(lockedFile)) {
             loadFiles(currentPath)
@@ -600,7 +639,7 @@ class MainActivity : AppCompatActivity() {
                 val password = input.text.toString()
                 val prefs = getSharedPreferences("folder_locks", MODE_PRIVATE)
                 val savedPassword = prefs.getString(folder.absolutePath.removeSuffix(".locked"), "")
-                
+
                 if (password == savedPassword) {
                     val unlockedFile = File(folder.absolutePath.removeSuffix(".locked"))
                     if (folder.renameTo(unlockedFile)) {
@@ -629,47 +668,47 @@ class MainActivity : AppCompatActivity() {
     private fun updateBreadcrumbs(directory: File) {
         binding.breadcrumbContainer.removeAllViews()
         val rootPath = Environment.getExternalStorageDirectory().absolutePath
-        
+
         if (directory.absolutePath.startsWith(rootPath)) {
-            // Inside Internal Storage
             val relativePath = directory.absolutePath.removePrefix(rootPath)
             val parts = relativePath.split("/").filter { it.isNotEmpty() }
-
-            addBreadcrumb("Internal Storage", Environment.getExternalStorageDirectory())
-
-            var currentAccumulatedPath = rootPath
+            addBreadcrumb("Storage", Environment.getExternalStorageDirectory(), isRoot = true)
+            var acc = rootPath
             parts.forEach { part ->
-                currentAccumulatedPath += "/$part"
-                val pathFile = File(currentAccumulatedPath)
-                addBreadcrumb(part, pathFile)
+                acc += "/$part"
+                addBreadcrumb(part, File(acc), isRoot = false)
             }
         } else {
-            // Outside Internal Storage (Root areas)
             val parts = directory.absolutePath.split("/").filter { it.isNotEmpty() }
-            addBreadcrumb("Root", File("/"))
-            
-            var currentAccumulatedPath = ""
+            addBreadcrumb("Root", File("/"), isRoot = true)
+            var acc = ""
             parts.forEach { part ->
-                currentAccumulatedPath += "/$part"
-                val pathFile = File(currentAccumulatedPath)
-                addBreadcrumb(part, pathFile)
+                acc += "/$part"
+                addBreadcrumb(part, File(acc), isRoot = false)
             }
         }
     }
 
-    private fun addBreadcrumb(text: String, file: File) {
-        val textView = TextView(this).apply {
-            this.text = if (text == "Internal Storage") text else " > $text"
-            this.setPadding(8, 0, 8, 0)
-            androidx.core.widget.TextViewCompat.setTextAppearance(this, com.google.android.material.R.style.TextAppearance_Material3_LabelLarge)
-            val typedValue = android.util.TypedValue()
-            theme.resolveAttribute(com.google.android.material.R.attr.colorPrimary, typedValue, true)
-            this.setTextColor(typedValue.data)
-            this.setOnClickListener {
-                navigateTo(file)
-            }
+    private fun addBreadcrumb(text: String, file: File, isRoot: Boolean) {
+        val tv = TextView(this).apply {
+            this.text = if (isRoot) text else "› $text"
+            setPadding(if (isRoot) 14 else 8, 8, 14, 8)
+            background = ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_badge_generic)
+            backgroundTintList = android.content.res.ColorStateList.valueOf(
+                ContextCompat.getColor(this@MainActivity, R.color.md_surface_variant)
+            )
+            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
+            textSize = 13f
+            letterSpacing = 0.01f
+            setOnClickListener { navigateTo(file) }
         }
-        binding.breadcrumbContainer.addView(textView)
+        val params = android.widget.LinearLayout.LayoutParams(
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(0, 0, 8, 0)
+        binding.breadcrumbContainer.addView(tv, params)
     }
 
     private fun updateStorageInfo() {
@@ -685,10 +724,10 @@ class MainActivity : AppCompatActivity() {
 
         val totalStr = Formatter.formatShortFileSize(this, totalSize)
         val availableStr = Formatter.formatShortFileSize(this, availableSize)
-        
+
         binding.storageText.text = "$availableStr free of $totalStr"
-        val progress = ((usedSize.toDouble() / totalSize.toDouble()) * 100).toInt()
-        binding.storageProgress.setProgress(progress, true)
+        val progress = ((usedSize.toDouble() / totalSize.toDouble()) * 100).toInt().coerceIn(0, 100)
+        binding.storageProgress.setProgressCompat(progress, true)
 
         calculateCategorySizes(path)
     }
@@ -702,9 +741,9 @@ class MainActivity : AppCompatActivity() {
             root.walkTopDown().maxDepth(3).forEach { file ->
                 if (file.isFile) {
                     when (file.extension.lowercase()) {
-                        "jpg", "jpeg", "png", "webp" -> imageSize += file.length()
-                        "mp4", "mkv", "avi" -> videoSize += file.length()
-                        "mp3", "wav", "flac" -> audioSize += file.length()
+                        "jpg", "jpeg", "png", "webp", "gif" -> imageSize += file.length()
+                        "mp4", "mkv", "avi", "mov", "webm" -> videoSize += file.length()
+                        "mp3", "wav", "flac", "aac", "ogg" -> audioSize += file.length()
                     }
                 }
             }
@@ -750,8 +789,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadFiles(directory: File) {
         lifecycleScope.launch(Dispatchers.IO) {
             var files = directory.listFiles()?.toList() ?: emptyList()
-            
-            // Try root if regular listing fails or if we are in root areas
+
             if (files.isEmpty() && directory.absolutePath != Environment.getExternalStorageDirectory().absolutePath) {
                 files = listFilesAsRoot(directory)
             }
@@ -795,7 +833,6 @@ class MainActivity : AppCompatActivity() {
         }
         return files
     }
-
 
     override fun onResume() {
         super.onResume()

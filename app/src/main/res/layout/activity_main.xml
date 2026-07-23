@@ -12,29 +12,292 @@
         android:layout_height="match_parent"
         android:background="?attr/colorSurface">
 
+        <!-- ========== HERO WITH GRADIENT + TOOLBAR + STORAGE CARD ========== -->
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBarLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/transparent"
-            app:elevation="0dp">
+            android:fitsSystemWindows="true"
+            app:elevation="0dp"
+            app:liftOnScroll="false">
 
-            <!-- 1. Search Bar at the VERY Top -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_gradient_hero"
+                android:orientation="vertical"
+                android:paddingTop="12dp"
+                android:paddingBottom="24dp">
+
+                <!-- Toolbar row -->
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="@android:color/transparent"
+                    android:contentInsetStartWithNavigation="0dp"
+                    android:contentInsetEndWithActions="0dp"
+                    app:contentInsetStart="0dp"
+                    app:contentInsetEnd="0dp"
+                    app:titleTextColor="#FFFFFF">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageButton
+                            android:id="@+id/btnMenu"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Open menu"
+                            android:src="@drawable/ic_menu"
+                            app:tint="#FFFFFF" />
+
+                        <com.example.clawlessexplorer.TypeWriterTextView
+                            android:id="@+id/tvTypewriter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="-0.01"
+                            android:shadowColor="#33000000"
+                            android:shadowDx="0"
+                            android:shadowDy="2"
+                            android:shadowRadius="6"
+                            android:textColor="#FFFFFF"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <ImageButton
+                            android:id="@+id/btnSearch"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="4dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Search"
+                            android:src="@drawable/ic_search"
+                            app:tint="#FFFFFF" />
+                    </RelativeLayout>
+                </androidx.appcompat.widget.Toolbar>
+
+                <!-- ===== GLASS STORAGE DASHBOARD ===== -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="#33FFFFFF"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_glass_hero"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.04"
+                                android:text="STORAGE"
+                                android:textColor="#FFFFFF"
+                                android:textSize="11sp" />
+
+                            <TextView
+                                android:id="@+id/storageText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.02"
+                                android:text="Loading..."
+                                android:textColor="#E6FFFFFF"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:fontFamily="sans-serif-black"
+                            android:letterSpacing="-0.02"
+                            android:text="Internal Storage"
+                            android:textColor="#FFFFFF"
+                            android:textSize="22sp" />
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/storageProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            app:indicatorColor="#FFFFFF"
+                            app:trackColor="#33FFFFFF"
+                            app:trackCornerRadius="6dp"
+                            app:trackThickness="6dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:orientation="horizontal"
+                            android:weightSum="3">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_badge_circle"
+                                    android:backgroundTint="#FF6B9D" />
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/imageSizeText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:letterSpacing="-0.01"
+                                        android:text="0 B"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="14sp" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif"
+                                        android:letterSpacing="0.04"
+                                        android:text="IMAGES"
+                                        android:textColor="#B3FFFFFF"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_badge_circle"
+                                    android:backgroundTint="#00C8B4" />
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/videoSizeText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:letterSpacing="-0.01"
+                                        android:text="0 B"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="14sp" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif"
+                                        android:letterSpacing="0.04"
+                                        android:text="VIDEOS"
+                                        android:textColor="#B3FFFFFF"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <View
+                                    android:layout_width="8dp"
+                                    android:layout_height="8dp"
+                                    android:background="@drawable/bg_badge_circle"
+                                    android:backgroundTint="#F59E0B" />
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/audioSizeText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:letterSpacing="-0.01"
+                                        android:text="0 B"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="14sp" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif"
+                                        android:letterSpacing="0.04"
+                                        android:text="AUDIO"
+                                        android:textColor="#B3FFFFFF"
+                                        android:textSize="10sp" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- ===== SEARCH BAR (hidden by default) ===== -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/searchLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+                style="@style/Widget.Clawless.Search"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="-8dp"
+                android:layout_marginBottom="8dp"
                 android:hint="Search files..."
+                android:visibility="gone"
+                app:endIconDrawable="@drawable/ic_mic"
                 app:endIconMode="custom"
-                app:endIconDrawable="@android:drawable/ic_btn_speak_now"
-                app:startIconDrawable="@android:drawable/ic_menu_search"
-                app:boxCornerRadiusTopStart="28dp"
-                app:boxCornerRadiusTopEnd="28dp"
-                app:boxCornerRadiusBottomStart="28dp"
-                app:boxCornerRadiusBottomEnd="28dp">
+                app:startIconDrawable="@drawable/ic_search">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/searchEditText"
@@ -42,170 +305,45 @@
                     android:layout_height="wrap_content"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
-                    android:paddingVertical="12dp" />
+                    android:paddingVertical="14dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- 2. Toolbar with Typewriter Title -->
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:titleCentered="true">
-
-                <com.example.clawlessexplorer.TypeWriterTextView
-                    android:id="@+id/tvTypewriter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                    android:textStyle="bold" />
-
-            </com.google.android.material.appbar.MaterialToolbar>
-
-            <!-- 3. Breadcrumbs -->
+            <!-- ===== BREADCRUMB CHIPS ===== -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:paddingHorizontal="16dp">
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="16dp"
+                android:scrollbars="none">
+
                 <LinearLayout
                     android:id="@+id/breadcrumbContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingVertical="4dp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" />
             </HorizontalScrollView>
 
-            <!-- 4. Storage Dashboard (Server Status Hidden) -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
+            <!-- Server status text - hidden (per design) -->
+            <TextView
+                android:id="@+id/serverStatusText"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Internal Storage"
-                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
-
-                    <!-- Server status text hidden as requested -->
-                    <TextView
-                        android:id="@+id/serverStatusText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone" />
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/storageProgress"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="8dp"
-                        app:indicatorColor="?attr/colorPrimary"
-                        app:trackCornerRadius="4dp"
-                        app:trackThickness="8dp" />
-
-                    <TextView
-                        android:id="@+id/storageText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Loading storage info..."
-                        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
-                        android:alpha="0.7" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="horizontal"
-                        android:weightSum="3">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/imageSizeText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 B"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Images"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                                android:alpha="0.6" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/videoSizeText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 B"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Videos"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                                android:alpha="0.6" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center"
-                            android:orientation="vertical">
-                            <TextView
-                                android:id="@+id/audioSizeText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 B"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Audio"
-                                android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
-                                android:alpha="0.6" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:visibility="gone" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
+        <!-- ========== FILE LIST ========== -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="88dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="120dp"
             app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+        <!-- ========== EMPTY STATE ========== -->
         <LinearLayout
             android:id="@+id/emptyState"
             android:layout_width="wrap_content"
@@ -213,41 +351,66 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
+            android:paddingHorizontal="32dp"
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:alpha="0.2"
-                android:src="@android:drawable/ic_menu_gallery" />
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:contentDescription="Empty"
+                android:src="@drawable/ic_empty_state" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:alpha="0.4"
-                android:text="No files in this folder"
-                android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01"
+                android:text="Nothing here yet"
+                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:text="This folder is empty.\nDrop files here or create a new one."
+                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
+        <!-- ========== FAB ========== -->
         <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
             android:id="@+id/fabAdd"
+            style="@style/Widget.Clawless.Fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
-            android:layout_margin="24dp"
+            android:layout_margin="20dp"
             android:text="New"
-            app:icon="@android:drawable/ic_input_add" />
+            app:icon="@drawable/ic_add" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/navigationView"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="?attr/colorSurface"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header"
+        app:itemIconTint="?attr/colorOnSurface"
+        app:itemTextColor="?attr/colorOnSurface"
+        app:itemRippleColor="?attr/colorPrimaryContainer"
+        app:itemShapeFillColor="?attr/colorSurfaceVariant"
+        app:itemShapeAppearance="@style/ShapeAppearance.Clawless.Medium"
+        app:itemShapeInsetStart="12dp"
+        app:itemShapeInsetEnd="12dp"
+        app:itemShapeInsetTop="4dp"
+        app:itemShapeInsetBottom="4dp"
+        app:itemHorizontalPadding="16dp"
         app:menu="@menu/menu_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
