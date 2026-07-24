@@ -212,6 +212,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_recent -> {
                     startActivity(Intent(this, RecentsActivity::class.java))
                 }
+                R.id.nav_terminal -> {
+                    startActivity(Intent(this, TerminalActivity::class.java))
+                }
                 R.id.nav_home -> navigateTo(Environment.getExternalStorageDirectory())
                 R.id.nav_root -> navigateTo(File("/"))
                 R.id.nav_sdcard -> {

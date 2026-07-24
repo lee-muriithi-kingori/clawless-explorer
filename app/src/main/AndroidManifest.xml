@@ -36,6 +36,12 @@
             android:label="HTML Viewer"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".TerminalActivity"
+            android:exported="false"
+            android:label="Terminal"
+            android:parentActivityName=".MainActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
