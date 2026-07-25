@@ -9,6 +9,9 @@ import android.os.Looper
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.WindowManager
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import com.example.clawlessexplorer.databinding.ActivityMediaViewerBinding
@@ -44,11 +47,11 @@ class MediaViewerActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            )
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, window.decorView).let { controller ->
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
@@ -93,7 +96,7 @@ class MediaViewerActivity : AppCompatActivity() {
         binding.surfaceView.visibility = View.GONE
         binding.audioContainer.visibility = View.VISIBLE
         binding.topOverlay.visibility = View.GONE
-        binding.controlsContainer.setBackgroundColor(android.graphics.Color.parseColor("#1A1B26"))
+        binding.controlsContainer.setBackgroundColor(getColor(R.color.dark_background))
 
         binding.audioTitle.text = File(filePath).name
 
