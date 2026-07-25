@@ -347,7 +347,6 @@ class ZipToolsActivity : AppCompatActivity() {
         val entry = ZipEntry(entryName)
 
         contentResolver.openInputStream(uri)?.use { inputStream ->
-            entry.size = inputStream.available().toLong()
             zipOut.putNextEntry(entry)
             inputStream.copyTo(zipOut)
             zipOut.closeEntry()

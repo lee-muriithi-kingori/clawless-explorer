@@ -56,6 +56,7 @@ class HashActivity : AppCompatActivity() {
         }
 
         val fileHash = filePath
+        val inputText = binding.inputText.text?.toString() ?: ""
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
                 try {
@@ -72,8 +73,7 @@ class HashActivity : AppCompatActivity() {
                                 }
                             }
                         } else {
-                            val text = binding.inputText.text?.toString() ?: ""
-                            digest.update(text.toByteArray(Charsets.UTF_8))
+                            digest.update(inputText.toByteArray(Charsets.UTF_8))
                         }
                         val hashBytes = digest.digest()
                         results[algo] = hashBytes.joinToString("") { "%02x".format(it) }

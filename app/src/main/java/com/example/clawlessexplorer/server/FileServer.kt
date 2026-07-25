@@ -1,6 +1,7 @@
 package com.example.clawlessexplorer.server
 
 import android.content.Context
+import android.provider.Settings
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -18,6 +19,7 @@ import java.net.NetworkInterface
 
 class FileServer(private val rootDir: File, private val context: Context) {
     private var server: NettyApplicationEngine? = null
+    private val authToken = "clawless_" + Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
     fun start(port: Int = 8080) {
         server = embeddedServer(Netty, host = "0.0.0.0", port = port) {
@@ -27,12 +29,14 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 get("/") { call.respondText(loadWebUi(), ContentType.Text.Html) }
 
                 get("/api/info") {
+                    if (!requireAuth(call)) return@get
                     call.respondText(
                         """{"name":"Clawless Explorer Server","root":"${rootDir.absolutePath}","lanUrl":"http://${lanIp()}:${port}/"}"""
                     )
                 }
 
                 get("/api/files") {
+                    if (!requireAuth(call)) return@get
                     val path = call.request.queryParameters["path"] ?: "/"
                     val directory = File(rootDir, path.trimStart('/'))
                     if (!directory.exists() || !directory.isDirectory) {
@@ -55,6 +59,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 get("/api/tree") {
+                    if (!requireAuth(call)) return@get
                     val path = call.request.queryParameters["path"] ?: "/"
                     val maxDepth = (call.request.queryParameters["depth"]?.toIntOrNull() ?: 2).coerceIn(1, 6)
                     val directory = File(rootDir, path.trimStart('/'))
@@ -65,6 +70,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 get("/api/search") {
+                    if (!requireAuth(call)) return@get
                     val q = call.request.queryParameters["q"]?.lowercase().orEmpty()
                     if (q.isBlank()) { call.respond(emptyList<Map<String, Any>>()); return@get }
                     val hits = mutableListOf<Map<String, Any>>()
@@ -86,6 +92,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 get("/download") {
+                    if (!requireAuth(call)) return@get
                     val path = call.request.queryParameters["path"]
                         ?: return@get call.respondText("Path missing", status = HttpStatusCode.BadRequest)
                     val file = resolveSafe(path)
@@ -103,6 +110,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 post("/api/copy") {
+                    if (!requireAuth(call)) return@post
                     val body = call.receive<CopyRequest>()
                     val src = resolveSafe(body.src)
                         ?: return@post call.respondText("Invalid src", status = HttpStatusCode.BadRequest)
@@ -125,6 +133,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 post("/api/move") {
+                    if (!requireAuth(call)) return@post
                     val body = call.receive<CopyRequest>()
                     val src = resolveSafe(body.src)
                         ?: return@post call.respondText("Invalid src", status = HttpStatusCode.BadRequest)
@@ -150,6 +159,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 delete("/api/delete") {
+                    if (!requireAuth(call)) return@delete
                     val path = call.request.queryParameters["path"]
                         ?: return@delete call.respondText("Path missing", status = HttpStatusCode.BadRequest)
                     val target = resolveSafe(path)
@@ -163,6 +173,7 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 }
 
                 put("/api/upload") {
+                    if (!requireAuth(call)) return@put
                     val name = call.request.queryParameters["name"]
                         ?: return@put call.respondText("name missing", status = HttpStatusCode.BadRequest)
                     val relPath = call.request.queryParameters["path"].orEmpty().trimStart('/')
@@ -192,6 +203,14 @@ class FileServer(private val rootDir: File, private val context: Context) {
 
     fun stop() {
         server?.stop(1000, 2000)
+    }
+
+    private suspend fun requireAuth(call: ApplicationCall): Boolean {
+        if (call.request.header("Authorization") != "Bearer $authToken") {
+            call.respondText("Unauthorized", status = HttpStatusCode.Unauthorized)
+            return false
+        }
+        return true
     }
 
     private fun resolveSafe(relPath: String): File? {
@@ -242,8 +261,10 @@ class FileServer(private val rootDir: File, private val context: Context) {
         } catch (e: Exception) { null }
     }
 
-    private fun loadWebUi(): String =
-        context.assets.open("web/index.html").bufferedReader().use { it.readText() }
+    private fun loadWebUi(): String {
+        val html = context.assets.open("web/index.html").bufferedReader().use { it.readText() }
+        return html.replace("</head>", "<script>window.__AUTH_TOKEN='$authToken'</script></head>")
+    }
 
     @kotlinx.serialization.Serializable
     private data class CopyRequest(val src: String, val dst: String, val overwrite: Boolean = false)

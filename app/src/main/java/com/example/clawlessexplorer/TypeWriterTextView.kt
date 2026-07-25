@@ -30,10 +30,10 @@ class TypeWriterTextView @JvmOverloads constructor(
         mIndex = 0
         mJob?.cancel()
         mJob = scope.launch {
-            delay(500) // Wait for layout
-            // Typing effect
-            while (mIndex <= mText!!.length) {
-                val currentText = mText!!.subSequence(0, mIndex++)
+            delay(500)
+            val text = mText ?: return@launch
+            while (mIndex <= text.length) {
+                val currentText = text.subSequence(0, mIndex++)
                 setText(StringBuilder().append(currentText).append("|"))
                 delay(mDelay)
             }

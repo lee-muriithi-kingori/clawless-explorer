@@ -31,6 +31,12 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".BookmarksActivity"
+            android:exported="false"
+            android:label="Bookmarks"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".HtmlViewerActivity"
             android:exported="false"
             android:label="HTML Viewer"
@@ -95,6 +101,24 @@
             android:exported="false"
             android:label="Zip Tools"
             android:parentActivityName=".UtilsHubActivity" />
+
+        <activity
+            android:name=".BatchRenameActivity"
+            android:exported="false"
+            android:label="Batch Rename"
+            android:parentActivityName=".UtilsHubActivity" />
+
+        <activity
+            android:name=".StorageAnalyzerActivity"
+            android:exported="false"
+            android:label="Storage Analyzer"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".CategoryFileListActivity"
+            android:exported="false"
+            android:label="Files"
+            android:parentActivityName=".StorageAnalyzerActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

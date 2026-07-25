@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: FileAdapter
     private lateinit var settings: SettingsManager
+    private lateinit var bookmarkManager: BookmarkManager
     private var currentPath: File = Environment.getExternalStorageDirectory()
     private var showHiddenFiles: Boolean = true
     private var fileServer: FileServer? = null
@@ -60,6 +61,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Apply persisted theme BEFORE super.onCreate so the inflate picks it up.
         settings = SettingsManager(this)
+        bookmarkManager = BookmarkManager(this)
         settings.applyTheme()
 
         super.onCreate(savedInstanceState)
@@ -212,6 +214,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_recent -> {
                     startActivity(Intent(this, RecentsActivity::class.java))
                 }
+                R.id.nav_bookmarks -> {
+                    startActivity(BookmarksActivity.intent(this))
+                }
                 R.id.nav_terminal -> {
                     startActivity(Intent(this, TerminalActivity::class.java))
                 }
@@ -222,8 +227,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_root -> navigateTo(File("/"))
                 R.id.nav_sdcard -> {
                     val externalFilesDirs = getExternalFilesDirs(null)
-                    if (externalFilesDirs.size > 1) {
-                        val sdCardPath = externalFilesDirs[1].absolutePath.split("/Android")[0]
+                    if (externalFilesDirs.size > 1 && externalFilesDirs[1] != null) {
+                        val sdCardPath = externalFilesDirs[1]!!.absolutePath.split("/Android")[0]
                         navigateTo(File(sdCardPath))
                     } else {
                         Toast.makeText(this, "SD Card not found", Toast.LENGTH_SHORT).show()
@@ -535,7 +540,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 101 && resultCode == RESULT_OK) {
             val result = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            binding.searchEditText.setText(result?.get(0))
+            binding.searchEditText.setText(result?.firstOrNull())
         }
     }
 
@@ -759,6 +764,27 @@ class MainActivity : AppCompatActivity() {
 
         view.findViewById<View>(R.id.btnOpen).setOnClickListener {
             openFile(file)
+            dialog.dismiss()
+        }
+
+        val btnBookmark = view.findViewById<View>(R.id.btnBookmark)
+        val bookmarkIcon = btnBookmark.findViewById<ImageView>(R.id.bookmarkActionIcon)
+        val bookmarkLabel = btnBookmark.findViewById<TextView>(R.id.bookmarkActionLabel)
+        val isBookmarked = bookmarkManager.isBookmarked(file.absolutePath)
+        bookmarkIcon.setImageResource(if (isBookmarked) R.drawable.ic_star_filled else R.drawable.ic_star_outline)
+        bookmarkIcon.imageTintList = android.content.res.ColorStateList.valueOf(
+            ContextCompat.getColor(this, if (isBookmarked) R.color.md_primary else R.color.file_generic)
+        )
+        bookmarkLabel.text = if (isBookmarked) "Remove Bookmark" else "Bookmark"
+        bookmarkLabel.setTextColor(if (isBookmarked) ContextCompat.getColor(this, R.color.md_primary) else ContextCompat.getColor(this, R.color.md_on_surface))
+        btnBookmark.setOnClickListener {
+            if (bookmarkManager.isBookmarked(file.absolutePath)) {
+                bookmarkManager.removeBookmark(file.absolutePath)
+                Toast.makeText(this, "Bookmark removed", Toast.LENGTH_SHORT).show()
+            } else {
+                bookmarkManager.addBookmark(file.absolutePath)
+                Toast.makeText(this, "Bookmarked", Toast.LENGTH_SHORT).show()
+            }
             dialog.dismiss()
         }
 
@@ -1012,6 +1038,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFile(file: File) {
         settings.addRecent(file.absolutePath)
+        if (bookmarkManager.isBookmarked(file.absolutePath)) {
+            bookmarkManager.updateLastAccessed(file.absolutePath)
+        }
         val ext = file.extension.lowercase()
 
         when {
@@ -1097,7 +1126,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun readTextAsRoot(file: File): String {
         return try {
-            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "cat '${file.absolutePath}'"))
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "cat", file.absolutePath))
             process.inputStream.bufferedReader().use { it.readText() }
         } catch (e: Exception) {
             "Failed to read as root: ${e.message}"
@@ -1199,12 +1228,16 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("folder_locks", MODE_PRIVATE)
         prefs.edit().putString(folder.absolutePath, password).apply()
 
-        val lockedFile = File(folder.parentFile, folder.name + ".locked")
-        if (folder.renameTo(lockedFile)) {
-            loadFiles(currentPath)
-            Toast.makeText(this, "Folder locked", Toast.LENGTH_SHORT).show()
+        if (folder.parentFile != null) {
+            val lockedFile = File(folder.parentFile!!, folder.name + ".locked")
+            if (folder.renameTo(lockedFile)) {
+                loadFiles(currentPath)
+                Toast.makeText(this, "Folder locked", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Failed to lock folder", Toast.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(this, "Failed to lock folder", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Cannot lock root directory", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1445,7 +1478,7 @@ class MainActivity : AppCompatActivity() {
     private fun listFilesAsRoot(directory: File): List<File> {
         val files = mutableListOf<File>()
         try {
-            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "ls -aF ${directory.absolutePath}"))
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "ls", "-aF", directory.absolutePath))
             process.inputStream.bufferedReader().useLines { lines ->
                 lines.forEach { line ->
                     if (line.isNotEmpty() && line != "./" && line != "../") {

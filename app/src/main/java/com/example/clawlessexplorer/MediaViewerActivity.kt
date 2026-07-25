@@ -233,7 +233,7 @@ class MediaViewerActivity : AppCompatActivity() {
                     .start()
             }
         }
-        handler.postDelayed(hideControlsRunnable!!, 4000)
+        hideControlsRunnable?.let { handler.postDelayed(it, 4000) }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

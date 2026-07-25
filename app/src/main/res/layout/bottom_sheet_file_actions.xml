@@ -123,6 +123,44 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/btnBookmark"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="12dp">
+
+        <View
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_badge_generic" />
+
+        <ImageView
+            android:id="@+id/bookmarkActionIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="-28dp"
+            android:src="@drawable/ic_star_outline"
+            app:tint="@color/file_generic" />
+
+        <TextView
+            android:id="@+id/bookmarkActionLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="-0.01"
+            android:text="Bookmark"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/btnRename"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

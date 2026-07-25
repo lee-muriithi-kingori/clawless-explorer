@@ -141,7 +141,7 @@ class TerminalActivity : AppCompatActivity() {
         appendPrompt("[$timestamp] $cmd\n")
         running = true
 
-        val effectiveCmd = if (useRoot) "su -c '$cmd'" else cmd
+        val effectiveCmd = if (useRoot) "su -c ${cmd.replace("'", "'\\''")}" else cmd
 
         session.execute(effectiveCmd, listener = object : TerminalSession.OutputListener {
             override fun onOutput(line: String, isError: Boolean) {
