@@ -133,7 +133,7 @@ class CodeViewerActivity : AppCompatActivity() {
         binding.lineNumbers.text = sb.toString()
 
         // Syntax-colored code
-        val ext = binding.titleText.text.substringAfterLast('.', "").toString().lowercase()
+        val ext = binding.titleText.text.toString().substringAfterLast('.', "").lowercase()
         val colored = colorizeCode(content, ext)
         binding.codeContent.text = colored
         binding.codeContent.typeface = Typeface.MONOSPACE

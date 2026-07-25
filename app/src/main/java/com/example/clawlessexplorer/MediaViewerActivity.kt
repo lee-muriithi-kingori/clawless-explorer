@@ -131,13 +131,13 @@ class MediaViewerActivity : AppCompatActivity() {
                     binding.seekBar.max = mp.duration
                     binding.timeTotal.text = formatTime(mp.duration)
                     mp.start()
-                    isPlaying = true
+                    this@MediaViewerActivity.isPlaying = true
                     updatePlayPauseIcons()
                     handler.post(updateSeekBar)
                     if (isVideo) scheduleHideControls()
                 }
                 setOnCompletionListener {
-                    isPlaying = false
+                    this@MediaViewerActivity.isPlaying = false
                     updatePlayPauseIcons()
                     handler.removeCallbacks(updateSeekBar)
                     binding.controlsContainer.visibility = View.VISIBLE
@@ -158,12 +158,12 @@ class MediaViewerActivity : AppCompatActivity() {
                     binding.seekBar.max = mp.duration
                     binding.timeTotal.text = formatTime(mp.duration)
                     mp.start()
-                    isPlaying = true
+                    this@MediaViewerActivity.isPlaying = true
                     updatePlayPauseIcons()
                     handler.post(updateSeekBar)
                 }
                 setOnCompletionListener {
-                    isPlaying = false
+                    this@MediaViewerActivity.isPlaying = false
                     updatePlayPauseIcons()
                     handler.removeCallbacks(updateSeekBar)
                 }

@@ -55,9 +55,11 @@ class ImageViewerActivity : AppCompatActivity() {
         binding.imageView.load(file) {
             crossfade(true)
             allowHardware(false)
-            listener(onSuccess = { _, result ->
-                imageWidth = result.size.width.toInt()
-                imageHeight = result.size.height.toInt()
+            listener(onSuccess = { _, _ ->
+                val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(path, opts)
+                imageWidth = opts.outWidth
+                imageHeight = opts.outHeight
                 updateInfoText()
             })
         }

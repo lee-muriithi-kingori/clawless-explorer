@@ -78,9 +78,9 @@ class HashActivity : AppCompatActivity() {
                         val hashBytes = digest.digest()
                         results[algo] = hashBytes.joinToString("") { "%02x".format(it) }
                     }
-                    results
+                    results as Map<String, String>
                 } catch (e: Exception) {
-                    mapOf("Error" to e.message ?: "Unknown error")
+                    mapOf("Error" to (e.message ?: "Unknown error"))
                 }
             }
 
