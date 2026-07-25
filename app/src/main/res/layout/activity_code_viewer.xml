@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0E0F18"
+    android:fitsSystemWindows="true">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_gradient_hero"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:contentScrim="@android:color/transparent">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
+                app:layout_collapseMode="pin">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageButton
+                        android:id="@+id/btnBack"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Back"
+                        android:rotation="180"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="#FFFFFF" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/titleText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="middle"
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="-0.01"
+                            android:maxWidth="220dp"
+                            android:shadowColor="#33000000"
+                            android:shadowDx="0"
+                            android:shadowDy="2"
+                            android:shadowRadius="6"
+                            android:singleLine="true"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="MainActivity.kt" />
+
+                        <TextView
+                            android:id="@+id/lineCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif"
+                            android:textColor="#B3FFFFFF"
+                            android:textSize="12sp"
+                            tools:text="248 lines" />
+                    </LinearLayout>
+
+                    <ImageButton
+                        android:id="@+id/btnShare"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="4dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Share"
+                        android:src="@drawable/ic_share"
+                        app:tint="#FFFFFF" />
+                </RelativeLayout>
+            </androidx.appcompat.widget.Toolbar>
+
+            <!-- Controls row below toolbar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#1A0E0F18"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/searchLayout"
+                    style="@style/Widget.Clawless.Search"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:hint="Search…"
+                    app:boxBackgroundColor="#1AFFFFFF"
+                    app:boxCornerRadiusBottomEnd="20dp"
+                    app:boxCornerRadiusBottomStart="20dp"
+                    app:boxCornerRadiusTopEnd="20dp"
+                    app:boxCornerRadiusTopStart="20dp"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    app:hintTextColor="#80FFFFFF"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:startIconTint="#80FFFFFF">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/searchInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:imeOptions="actionSearch|flagNoExtractUi"
+                        android:inputType="textNoSuggestions"
+                        android:maxLines="1"
+                        android:textColor="#E8E9F0"
+                        android:textColorHint="#66FFFFFF"
+                        android:textSize="13sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageButton
+                    android:id="@+id/btnFindPrev"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Find Previous"
+                    android:src="@drawable/ic_chevron_right"
+                    android:rotation="90"
+                    android:visibility="gone"
+                    app:tint="#B3FFFFFF" />
+
+                <ImageButton
+                    android:id="@+id/btnFindNext"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginStart="2dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Find Next"
+                    android:rotation="270"
+                    android:src="@drawable/ic_chevron_right"
+                    android:visibility="gone"
+                    app:tint="#B3FFFFFF" />
+
+                <TextView
+                    android:id="@+id/searchCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="sans-serif"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="11sp"
+                    android:visibility="gone"
+                    tools:text="1/5" />
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:layout_marginHorizontal="6dp"
+                    android:background="#33FFFFFF" />
+
+                <TextView
+                    android:id="@+id/btnWrap"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:gravity="center"
+                    android:paddingHorizontal="10dp"
+                    android:text="Wrap"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="12sp"
+                    app:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/btnFontMinus"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="4dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:gravity="center"
+                    android:text="A−"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="13sp"
+                    app:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/btnFontPlus"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="2dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:gravity="center"
+                    android:text="A+"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="13sp"
+                    app:fontFamily="sans-serif-medium" />
+            </LinearLayout>
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Code content area -->
+    <HorizontalScrollView
+        android:id="@+id/horizontalScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0E0F18"
+        android:fillViewport="true"
+        android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/lineNumbers"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#0E0F18"
+                android:fontFamily="monospace"
+                android:gravity="end"
+                android:paddingEnd="12dp"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="32dp"
+                android:textColor="#3D3F4D"
+                android:textIsSelectable="false"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/codeContent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#0E0F18"
+                android:fontFamily="monospace"
+                android:paddingEnd="24dp"
+                android:paddingStart="12dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="32dp"
+                android:textColor="#E8E9F0"
+                android:textIsSelectable="true"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Truncated notice -->
+    <TextView
+        android:id="@+id/truncatedNotice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#E6FF6B9D"
+        android:gravity="center"
+        android:paddingVertical="8dp"
+        android:text="File truncated — showing first 500 KB"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <!-- Bottom action bar -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="#1A0E0F18"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="6dp"
+        android:visibility="gone">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCopyAll"
+            style="@style/Widget.Clawless.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Copy All"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_content_copy"
+            app:iconSize="16dp"
+            app:iconTint="#B3FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareBottom"
+            style="@style/Widget.Clawless.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="4dp"
+            android:text="Share"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_share"
+            app:iconSize="16dp"
+            app:iconTint="#B3FFFFFF" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFindPrevBottom"
+            style="@style/Widget.Clawless.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Prev"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFindNextBottom"
+            style="@style/Widget.Clawless.Button.Text"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Next"
+            android:textColor="#B3FFFFFF"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

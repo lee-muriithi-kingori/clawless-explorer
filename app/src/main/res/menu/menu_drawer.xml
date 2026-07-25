@@ -8,6 +8,10 @@
         android:id="@+id/nav_terminal"
         android:icon="@drawable/ic_terminal"
         android:title="Terminal" />
+    <item
+        android:id="@+id/nav_tools"
+        android:icon="@drawable/ic_settings"
+        android:title="Developer Tools" />
     <divider />
     <group android:checkableBehavior="single">
         <item

@@ -1,7 +1,5 @@
 package com.example.clawlessexplorer
 
-import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -11,16 +9,17 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-/**
- * In-app terminal. Runs commands via `sh -c` (with cwd tracking) or `su -c`
- * for root-elevation when the binary is present. Output streams live into
- * a monospace TextView; up/down arrows recall command history.
- */
 class TerminalActivity : AppCompatActivity() {
 
     private lateinit var session: TerminalSession
@@ -28,8 +27,18 @@ class TerminalActivity : AppCompatActivity() {
     private lateinit var scroll: ScrollView
     private lateinit var input: android.widget.EditText
     private lateinit var prompt: TextView
+    private lateinit var btnRoot: com.google.android.material.button.MaterialButton
+    private lateinit var quickCommands: LinearLayout
     private val sb = SpannableStringBuilder()
     private var running = false
+    private var useRoot = false
+    private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+    private val quickCmds = listOf(
+        "ls -la", "pwd", "df -h", "free -m", "top -n 1",
+        "ps aux", "cat /proc/cpuinfo", "ip addr", "ping -c 3 google.com",
+        "whoami", "id", "uname -a", "du -sh *", "find . -type f | head -20"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,12 +48,38 @@ class TerminalActivity : AppCompatActivity() {
         scroll = findViewById(R.id.scrollView)
         input = findViewById(R.id.commandInput)
         prompt = findViewById(R.id.promptLabel)
+        btnRoot = findViewById(R.id.btnRoot)
+        quickCommands = findViewById(R.id.quickCommands)
+
         findViewById<ImageButton>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<ImageButton>(R.id.btnClear).setOnClickListener { clearOutput() }
 
         session = TerminalSession()
         output.setTextColor(0xFFE8E9F0.toInt())
-        output.typeface = Typeface.MONOSPACE
+        output.typeface = android.graphics.Typeface.MONOSPACE
+
+        // Root toggle
+        btnRoot.setOnClickListener {
+            useRoot = !useRoot
+            btnRoot.text = if (useRoot) "SU" else "SH"
+            btnRoot.setBackgroundColor(if (useRoot) 0xFFEF4444.toInt() else 0xFF10B981.toInt())
+            appendPrompt(if (useRoot) "\n⚡ Root mode enabled (su -c)\n\n" else "\n✓ Shell mode (sh -c)\n\n")
+            refreshPrompt()
+        }
+
+        // Quick command chips
+        quickCmds.forEach { cmd ->
+            val chip = Chip(this).apply {
+                text = cmd
+                isCheckable = false
+                setOnClickListener {
+                    input.setText(cmd)
+                    input.setSelection(cmd.length)
+                    submit(cmd)
+                }
+            }
+            quickCommands.addView(chip)
+        }
 
         input.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND ||
@@ -54,7 +89,7 @@ class TerminalActivity : AppCompatActivity() {
                 true
             } else false
         }
-        // Disable system spell-checker / autocorrect that would mess with the prompt.
+
         input.inputType = android.text.InputType.TYPE_CLASS_TEXT or
             android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         input.setOnKeyListener { _, keyCode, ev ->
@@ -75,10 +110,12 @@ class TerminalActivity : AppCompatActivity() {
         }
 
         // Welcome banner
-        appendPrompt("Clawless Explorer · in-app terminal\n")
-        appendPrompt("Sh: ${systemShell()}\n")
+        appendPrompt("╔══════════════════════════════════╗\n")
+        appendPrompt("║   Clawless Explorer · Terminal  ║\n")
+        appendPrompt("╚══════════════════════════════════╝\n")
+        appendPrompt("Shell: ${systemShell()}\n")
         appendPrompt("Cwd: ${session.cwd.absolutePath}\n")
-        appendPrompt("Type a command and press Enter. Use ↑/↓ for history.\n\n")
+        appendPrompt("Type a command. ↑/↓ for history. Tap SU for root.\n\n")
         refreshPrompt()
 
         input.requestFocus()
@@ -90,21 +127,23 @@ class TerminalActivity : AppCompatActivity() {
         val cmd = raw.trim()
         input.setText("")
         if (cmd.isEmpty()) {
-            // blank Enter → just print a fresh prompt
             printPrompt()
             return
         }
         if (running) {
             append("> $cmd\n", promptColor = 0xFFFF6B9D.toInt())
-            append("(busy — wait for the current command to finish)\n", error = true)
+            append("(busy — wait for current command)\n", error = true)
             printPrompt()
             return
         }
 
-        appendPrompt("$cmd\n")
+        val timestamp = timeFormat.format(Date())
+        appendPrompt("[$timestamp] $cmd\n")
         running = true
 
-        session.execute(cmd, listener = object : TerminalSession.OutputListener {
+        val effectiveCmd = if (useRoot) "su -c '$cmd'" else cmd
+
+        session.execute(effectiveCmd, listener = object : TerminalSession.OutputListener {
             override fun onOutput(line: String, isError: Boolean) {
                 runOnUiThread { append("$line\n", error = isError) }
             }
@@ -120,14 +159,17 @@ class TerminalActivity : AppCompatActivity() {
     }
 
     private fun refreshPrompt() {
-        val rel = session.cwd.absolutePath.replace(android.os.Environment.getExternalStorageDirectory().absolutePath, "~")
-        prompt.text = "$rel \$ "
+        val rel = session.cwd.absolutePath.replace(
+            android.os.Environment.getExternalStorageDirectory().absolutePath, "~"
+        )
+        val prefix = if (useRoot) "root" else "$"
+        prompt.text = "$rel $prefix "
     }
 
     private fun clearOutput() {
         sb.clear()
         output.text = sb
-        appendPrompt("Clawless Explorer · terminal cleared\n\n")
+        appendPrompt("Terminal cleared\n\n")
         printPrompt()
     }
 
@@ -144,7 +186,6 @@ class TerminalActivity : AppCompatActivity() {
         }
         sb.setSpan(ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         output.text = sb
-        // Scroll to bottom
         scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
     }
 

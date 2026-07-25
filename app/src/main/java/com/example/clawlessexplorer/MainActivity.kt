@@ -215,6 +215,9 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_terminal -> {
                     startActivity(Intent(this, TerminalActivity::class.java))
                 }
+                R.id.nav_tools -> {
+                    startActivity(Intent(this, UtilsHubActivity::class.java))
+                }
                 R.id.nav_home -> navigateTo(Environment.getExternalStorageDirectory())
                 R.id.nav_root -> navigateTo(File("/"))
                 R.id.nav_sdcard -> {
@@ -990,19 +993,60 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFile(file: File) {
         settings.addRecent(file.absolutePath)
-        val extension = file.extension.lowercase()
-        if (extension in listOf("txt", "log", "conf", "xml", "json", "sh", "prop", "md", "kt", "java", "py", "yml", "yaml", "html", "css", "js")) {
-            showTextFileViewer(file)
-        } else {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW)
-                val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
-                intent.setDataAndType(uri, getMimeType(file))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(this, "No app found to open this file type", Toast.LENGTH_SHORT).show()
+        val ext = file.extension.lowercase()
+
+        when {
+            // Images → built-in image viewer
+            ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp", "svg") -> {
+                startActivity(ImageViewerActivity.intent(this, file.absolutePath))
+            }
+
+            // Video → built-in media player
+            ext in listOf("mp4", "mkv", "avi", "mov", "webm", "flv") -> {
+                startActivity(MediaViewerActivity.intent(this, file.absolutePath, "video"))
+            }
+
+            // Audio → built-in media player
+            ext in listOf("mp3", "wav", "flac", "aac", "ogg", "m4a", "wma") -> {
+                startActivity(MediaViewerActivity.intent(this, file.absolutePath, "audio"))
+            }
+
+            // APK → built-in APK info viewer
+            ext == "apk" -> {
+                startActivity(ApkViewerActivity.intent(this, file.absolutePath))
+            }
+
+            // HTML → built-in HTML viewer
+            ext in listOf("html", "htm") -> {
+                startActivity(HtmlViewerActivity.intent(this, file.absolutePath))
+            }
+
+            // Code / text → built-in code viewer with syntax highlighting
+            ext in listOf(
+                "txt", "log", "conf", "prop", "md", "csv",
+                "kt", "java", "py", "js", "ts", "jsx", "tsx",
+                "c", "cpp", "h", "hpp", "cs", "rb", "go", "rs", "swift",
+                "sh", "bash", "zsh",
+                "css", "scss", "less",
+                "json", "xml", "yaml", "yml",
+                "html", "htm", "sql", "gradle", "toml", "ini", "cfg"
+            ) -> {
+                startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+            }
+
+            // Everything else → try external app, fall back to code viewer
+            else -> {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
+                    intent.setDataAndType(uri, getMimeType(file))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    // No app found — offer to view as text in code viewer
+                    startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+                }
             }
         }
     }

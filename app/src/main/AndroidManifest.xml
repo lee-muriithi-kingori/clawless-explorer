@@ -42,6 +42,54 @@
             android:label="Terminal"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".CodeViewerActivity"
+            android:exported="false"
+            android:label="Code Viewer"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".ImageViewerActivity"
+            android:exported="false"
+            android:label="Image Viewer"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".MediaViewerActivity"
+            android:exported="false"
+            android:label="Media Player"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".ApkViewerActivity"
+            android:exported="false"
+            android:label="APK Info"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".UtilsHubActivity"
+            android:exported="false"
+            android:label="Tools"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".EncodeDecodeActivity"
+            android:exported="false"
+            android:label="Encode / Decode"
+            android:parentActivityName=".UtilsHubActivity" />
+
+        <activity
+            android:name=".HashActivity"
+            android:exported="false"
+            android:label="Hash Generator"
+            android:parentActivityName=".UtilsHubActivity" />
+
+        <activity
+            android:name=".JsonFormatterActivity"
+            android:exported="false"
+            android:label="JSON Formatter"
+            android:parentActivityName=".UtilsHubActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

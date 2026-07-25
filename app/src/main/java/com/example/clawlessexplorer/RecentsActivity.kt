@@ -20,6 +20,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.content.FileProvider
 
 class RecentsActivity : AppCompatActivity() {
 
@@ -60,11 +61,64 @@ class RecentsActivity : AppCompatActivity() {
 
     private fun openFile(file: File) {
         settings.addRecent(file.absolutePath)
-        val intent = Intent(this, MainActivity::class.java).apply {
-            putExtra(EXTRA_OPEN_PATH, file.absolutePath)
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        val ext = file.extension.lowercase()
+
+        when {
+            ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp", "svg") -> {
+                startActivity(ImageViewerActivity.intent(this, file.absolutePath))
+            }
+            ext in listOf("mp4", "mkv", "avi", "mov", "webm", "flv") -> {
+                startActivity(MediaViewerActivity.intent(this, file.absolutePath, "video"))
+            }
+            ext in listOf("mp3", "wav", "flac", "aac", "ogg", "m4a", "wma") -> {
+                startActivity(MediaViewerActivity.intent(this, file.absolutePath, "audio"))
+            }
+            ext == "apk" -> {
+                startActivity(ApkViewerActivity.intent(this, file.absolutePath))
+            }
+            ext in listOf("html", "htm") -> {
+                startActivity(HtmlViewerActivity.intent(this, file.absolutePath))
+            }
+            ext in listOf(
+                "txt", "log", "conf", "prop", "md", "csv",
+                "kt", "java", "py", "js", "ts", "jsx", "tsx",
+                "c", "cpp", "h", "hpp", "cs", "rb", "go", "rs", "swift",
+                "sh", "bash", "zsh", "css", "scss", "less",
+                "json", "xml", "yaml", "yml", "sql", "gradle", "toml", "ini", "cfg"
+            ) -> {
+                startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+            }
+            else -> {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
+                    intent.setDataAndType(uri, getMimeType(file))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+                }
+            }
         }
-        startActivity(intent)
+    }
+
+    private fun getMimeType(file: File): String {
+        val ext = file.extension.lowercase()
+        return when (ext) {
+            "txt" -> "text/plain"
+            "html", "htm" -> "text/html"
+            "json" -> "application/json"
+            "xml" -> "application/xml"
+            "pdf" -> "application/pdf"
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "gif" -> "image/gif"
+            "mp4" -> "video/mp4"
+            "mp3" -> "audio/mpeg"
+            "zip" -> "application/zip"
+            else -> "application/octet-stream"
+        }
     }
 
     private fun confirmRemove(file: File) {

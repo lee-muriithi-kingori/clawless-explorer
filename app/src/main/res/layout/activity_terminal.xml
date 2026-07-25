@@ -53,16 +53,41 @@
                     android:id="@+id/btnClear"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:layout_alignParentEnd="true"
+                    android:layout_toStartOf="@+id/btnRootToggle"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Clear"
                     android:src="@drawable/ic_close"
                     app:tint="#FFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRoot"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="8dp"
+                    android:backgroundTint="#10B981"
+                    android:text="SH"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="16dp" />
             </RelativeLayout>
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Quick command chips -->
+    <HorizontalScrollView
+        android:id="@+id/quickCommands"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#12131C"
+        android:paddingVertical="6dp"
+        android:paddingHorizontal="8dp"
+        android:scrollbars="none" />
 
     <ScrollView
         android:id="@+id/scrollView"
