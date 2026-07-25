@@ -60,19 +60,11 @@ class RecentsActivity : AppCompatActivity() {
 
     private fun openFile(file: File) {
         settings.addRecent(file.absolutePath)
-        if (file.isDirectory) {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra(EXTRA_OPEN_PATH, file.absolutePath)
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
-        } else {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                putExtra(EXTRA_OPEN_PATH, file.absolutePath)
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }
-            startActivity(intent)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra(EXTRA_OPEN_PATH, file.absolutePath)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
+        startActivity(intent)
     }
 
     private fun confirmRemove(file: File) {

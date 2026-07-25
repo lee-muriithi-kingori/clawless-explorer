@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startFileServer() {
-        fileServer = FileServer(Environment.getExternalStorageDirectory())
+        fileServer = FileServer(Environment.getExternalStorageDirectory(), this)
         fileServer?.start()
         // Server status hidden from UI by design.
     }
@@ -635,7 +635,7 @@ class MainActivity : AppCompatActivity() {
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> createNewFolder()
-                    1 -> Toast.makeText(this, "File creation coming soon", Toast.LENGTH_SHORT).show()
+                    1 -> createNewFile()
                 }
             }
             .show()
@@ -664,6 +664,36 @@ class MainActivity : AppCompatActivity() {
                         loadFiles(currentPath)
                     } else {
                         Toast.makeText(this, "Failed to create folder", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun createNewFile() {
+        val input = TextInputEditText(this)
+        input.setHint("File name (e.g. notes.txt)")
+        val container = android.widget.FrameLayout(this)
+        val params = android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(48, 16, 48, 16)
+        input.layoutParams = params
+        container.addView(input)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("New File")
+            .setView(container)
+            .setPositiveButton("Create") { _, _ ->
+                val name = input.text.toString()
+                if (name.isNotEmpty()) {
+                    val newFile = File(currentPath, name)
+                    if (newFile.createNewFile()) {
+                        loadFiles(currentPath)
+                    } else {
+                        Toast.makeText(this, "Failed to create file", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -1014,11 +1044,61 @@ class MainActivity : AppCompatActivity() {
     private fun getMimeType(file: File): String {
         val extension = file.extension.lowercase()
         return when (extension) {
-            "jpg", "jpeg", "png", "webp", "gif" -> "image/*"
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "webp" -> "image/webp"
+            "gif" -> "image/gif"
+            "bmp" -> "image/bmp"
+            "svg" -> "image/svg+xml"
+            "mp4" -> "video/mp4"
+            "mkv" -> "video/x-matroska"
+            "avi" -> "video/x-msvideo"
+            "mov" -> "video/quicktime"
+            "webm" -> "video/webm"
+            "flv" -> "video/x-flv"
+            "mp3" -> "audio/mpeg"
+            "wav" -> "audio/wav"
+            "flac" -> "audio/flac"
+            "aac" -> "audio/aac"
+            "ogg" -> "audio/ogg"
+            "m4a" -> "audio/mp4"
+            "wma" -> "audio/x-ms-wma"
             "pdf" -> "application/pdf"
-            "txt" -> "text/plain"
-            "mp4" -> "video/*"
-            "mp3" -> "audio/*"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "xls" -> "application/vnd.ms-excel"
+            "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "ppt" -> "application/vnd.ms-powerpoint"
+            "pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            "txt", "log", "conf", "prop", "md", "csv" -> "text/plain"
+            "rtf" -> "application/rtf"
+            "odt" -> "application/vnd.oasis.opendocument.text"
+            "epub" -> "application/epub+zip"
+            "zip" -> "application/zip"
+            "rar" -> "application/vnd.rar"
+            "7z" -> "application/x-7z-compressed"
+            "tar" -> "application/x-tar"
+            "gz" -> "application/gzip"
+            "bz2" -> "application/x-bzip2"
+            "xz" -> "application/x-xz"
+            "tgz" -> "application/gzip"
+            "apk" -> "application/vnd.android.package-archive"
+            "html", "htm" -> "text/html"
+            "css" -> "text/css"
+            "js" -> "application/javascript"
+            "json" -> "application/json"
+            "xml" -> "application/xml"
+            "yaml", "yml" -> "text/yaml"
+            "kt" -> "text/x-kotlin"
+            "java" -> "text/x-java"
+            "py" -> "text/x-python"
+            "c", "cpp", "h", "hpp" -> "text/x-c"
+            "cs" -> "text/x-csharp"
+            "rb" -> "text/x-ruby"
+            "go" -> "text/x-go"
+            "rs" -> "text/x-rust"
+            "swift" -> "text/x-swift"
+            "sh" -> "application/x-sh"
             else -> "*/*"
         }
     }

@@ -1,5 +1,6 @@
 package com.example.clawlessexplorer.server
 
+import android.content.Context
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -15,7 +16,7 @@ import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
-class FileServer(private val rootDir: File) {
+class FileServer(private val rootDir: File, private val context: Context) {
     private var server: NettyApplicationEngine? = null
 
     fun start(port: Int = 8080) {
@@ -194,7 +195,8 @@ class FileServer(private val rootDir: File) {
     }
 
     private fun resolveSafe(relPath: String): File? {
-        val cleaned = relPath.trimStart('/').replace("..", "")
+        val cleaned = relPath.trimStart('/')
+        if (cleaned.isEmpty()) return rootDir
         val resolved = File(rootDir, cleaned).canonicalFile
         val root = rootDir.canonicalFile
         return if (resolved.absolutePath.startsWith(root.absolutePath)) resolved else null
@@ -241,9 +243,7 @@ class FileServer(private val rootDir: File) {
     }
 
     private fun loadWebUi(): String =
-        FileServer::class.java.classLoader!!.getResourceAsStream("web/index.html")!!
-            .bufferedReader()
-            .use { it.readText() }
+        context.assets.open("web/index.html").bufferedReader().use { it.readText() }
 
     @kotlinx.serialization.Serializable
     private data class CopyRequest(val src: String, val dst: String, val overwrite: Boolean = false)
