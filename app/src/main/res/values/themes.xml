@@ -49,6 +49,11 @@
 
         <!-- Component elevation -->
         <item name="elevationOverlayEnabled">true</item>
+
+        <!-- Surface containers (missing from M3 defaults) -->
+        <item name="colorSurfaceContainer">@color/md_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_surface_container_high</item>
+        <item name="colorSurfaceContainerLow">@color/md_surface_variant</item>
     </style>
 
     <style name="Theme.ClawlessExplorer" parent="Base.Theme.ClawlessExplorer" />
@@ -76,9 +81,9 @@
 
     <!-- ============ COMPONENT STYLES ============ -->
 
-    <!-- Cards: glass-like, soft elevation -->
+    <!-- Cards: consistent 20dp radius, no elevation -->
     <style name="Widget.Clawless.Card" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardCornerRadius">24dp</item>
+        <item name="cardCornerRadius">20dp</item>
         <item name="cardElevation">0dp</item>
         <item name="cardBackgroundColor">?attr/colorSurface</item>
         <item name="strokeWidth">0dp</item>
@@ -142,7 +147,7 @@
         <item name="titleTextAppearance">@style/TextAppearance.Clawless.ToolbarTitle</item>
     </style>
 
-    <!-- Text input / search -->
+    <!-- Text input / search (pill shape for search bars) -->
     <style name="Widget.Clawless.Search" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense">
         <item name="boxCornerRadiusTopStart">24dp</item>
         <item name="boxCornerRadiusTopEnd">24dp</item>
@@ -152,6 +157,25 @@
         <item name="boxStrokeWidthFocused">0dp</item>
         <item name="boxBackgroundColor">?attr/colorSurfaceVariant</item>
         <item name="hintTextColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Standard text input (for forms, dialogs, tools) -->
+    <style name="Widget.Clawless.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <style name="Widget.Clawless.TextInput.Dense" parent="Widget.Material3.TextInputLayout.OutlinedBox.Dense">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
     </style>
 
     <!-- ============ TYPOGRAPHY ============ -->

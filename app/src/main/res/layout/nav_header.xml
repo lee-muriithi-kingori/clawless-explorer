@@ -26,7 +26,7 @@
             android:layout_gravity="center"
             android:contentDescription="App Icon"
             android:src="@drawable/ic_app_logo"
-            app:tint="#FFFFFF" />
+            app:tint="@color/text_on_hero" />
     </FrameLayout>
 
     <TextView
@@ -40,7 +40,7 @@
         android:shadowDy="2"
         android:shadowRadius="8"
         android:text="Clawless Explorer"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/text_on_hero"
         android:textSize="24sp" />
 
     <TextView
@@ -50,7 +50,7 @@
         android:fontFamily="sans-serif"
         android:letterSpacing="0.02"
         android:text="Premium file management"
-        android:textColor="#E6FFFFFF"
+        android:textColor="@color/text_on_hero_secondary"
         android:textSize="13sp" />
 
     <LinearLayout
@@ -67,7 +67,7 @@
             android:layout_width="6dp"
             android:layout_height="6dp"
             android:background="@drawable/bg_badge_circle"
-            android:backgroundTint="#00C8B4" />
+            android:backgroundTint="@color/brand_teal" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -76,7 +76,7 @@
             android:fontFamily="sans-serif-medium"
             android:letterSpacing="0.04"
             android:text="v1.0.0"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/text_on_hero"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

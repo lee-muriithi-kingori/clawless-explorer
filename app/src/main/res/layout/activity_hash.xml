@@ -72,7 +72,7 @@
                 android:layout_marginBottom="12dp"
                 android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp">
 
                 <LinearLayout
@@ -103,14 +103,10 @@
             <!-- Input -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/inputLayout"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                style="@style/Widget.Clawless.TextInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Text to hash"
-                app:boxCornerRadiusTopStart="16dp"
-                app:boxCornerRadiusTopEnd="16dp"
-                app:boxCornerRadiusBottomStart="16dp"
-                app:boxCornerRadiusBottomEnd="16dp">
+                android:hint="Text to hash">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/inputText"
@@ -191,7 +187,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp">
 
                 <LinearLayout

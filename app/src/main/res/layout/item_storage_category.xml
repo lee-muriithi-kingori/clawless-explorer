@@ -7,8 +7,8 @@
     android:clickable="true"
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="1dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
     <LinearLayout
@@ -42,7 +42,7 @@
                 android:id="@+id/categoryName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="12sp" />
 
         </LinearLayout>
@@ -66,7 +66,7 @@
                 android:id="@+id/categoryPercentage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
@@ -77,7 +77,7 @@
                 android:layout_marginTop="4dp"
                 app:trackCornerRadius="4dp"
                 app:trackThickness="6dp"
-                app:trackColor="#F1F5F9" />
+                app:trackColor="?attr/colorOutlineVariant" />
 
         </LinearLayout>
 

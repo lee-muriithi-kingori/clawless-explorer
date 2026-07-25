@@ -59,9 +59,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:visibility="gone"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -161,15 +162,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilFind"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Find text"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -182,14 +179,10 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilReplace"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Replace with"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -209,14 +202,10 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilPrefix"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Prefix to add"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -236,14 +225,10 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilSuffix"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Suffix to add"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -263,15 +248,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilSeqPrefix"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Prefix"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -284,15 +265,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilStartNumber"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
-                        android:hint="Start number"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp">
+                        android:hint="Start number">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etStartNumber"
@@ -305,14 +282,10 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilPaddingLength"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Padding length (e.g. 3 → 001)"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp">
+                        android:hint="Padding length (e.g. 3 → 001)">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etPaddingLength"
@@ -332,15 +305,11 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilRegexPattern"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:hint="Regex pattern"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText
@@ -354,14 +323,10 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilRegexReplacement"
-                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Replacement (use $1, $2...)"
-                        app:boxCornerRadiusTopStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusBottomEnd="16dp"
                         app:endIconMode="clear_text">
 
                         <com.google.android.material.textfield.TextInputEditText

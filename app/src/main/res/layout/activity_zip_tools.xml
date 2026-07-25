@@ -102,9 +102,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:visibility="gone"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeWidth="0dp">
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:strokeWidth="1dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -135,7 +136,7 @@
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilOutputFilename"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        style="@style/Widget.Clawless.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
@@ -204,9 +205,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"
                         android:visibility="gone"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeWidth="0dp">
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:strokeWidth="1dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -242,9 +244,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:visibility="gone"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="2dp"
-                        app:strokeWidth="0dp">
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:strokeWidth="1dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"

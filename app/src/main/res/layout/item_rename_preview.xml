@@ -15,7 +15,7 @@
         android:layout_weight="1"
         android:ellipsize="middle"
         android:maxLines="1"
-        android:textColor="#CF6679"
+        android:textColor="@color/md_error"
         android:textSize="13sp"
         tools:text="old_photo.jpg" />
 
@@ -34,7 +34,7 @@
         android:layout_weight="1"
         android:ellipsize="middle"
         android:maxLines="1"
-        android:textColor="#81C784"
+        android:textColor="@color/semantic_success"
         android:textStyle="bold"
         android:textSize="13sp"
         tools:text="new_photo.jpg" />

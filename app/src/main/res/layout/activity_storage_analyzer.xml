@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="?attr/colorSurface"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -37,8 +37,8 @@
 
                 <ImageButton
                     android:id="@+id/backButton"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_gravity="start|center_vertical"
                     android:layout_marginStart="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
@@ -76,7 +76,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="8dp"
             android:text="Scanning storage..."
-            android:textColor="?android:attr/textColorSecondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone" />
 
         <ScrollView
@@ -97,9 +97,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -113,7 +114,7 @@
                             android:text="Storage Overview"
                             android:textSize="16sp"
                             android:textStyle="bold"
-                            android:textColor="?android:attr/textColorPrimary" />
+                            android:textColor="?attr/colorOnSurface" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -134,14 +135,14 @@
                                     android:text="--"
                                     android:textSize="20sp"
                                     android:textStyle="bold"
-                                    android:textColor="?android:attr/textColorPrimary" />
+                                    android:textColor="?attr/colorOnSurface" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Total"
                                     android:textSize="12sp"
-                                    android:textColor="?android:attr/textColorSecondary" />
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
                             </LinearLayout>
 
                             <LinearLayout
@@ -157,14 +158,14 @@
                                     android:text="--"
                                     android:textSize="20sp"
                                     android:textStyle="bold"
-                                    android:textColor="#EF4444" />
+                                    android:textColor="@color/md_error" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Used"
                                     android:textSize="12sp"
-                                    android:textColor="?android:attr/textColorSecondary" />
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
                             </LinearLayout>
 
                             <LinearLayout
@@ -180,14 +181,14 @@
                                     android:text="--"
                                     android:textSize="20sp"
                                     android:textStyle="bold"
-                                    android:textColor="#22C55E" />
+                                    android:textColor="@color/semantic_success" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="Free"
                                     android:textSize="12sp"
-                                    android:textColor="?android:attr/textColorSecondary" />
+                                    android:textColor="?attr/colorOnSurfaceVariant" />
                             </LinearLayout>
 
                         </LinearLayout>
@@ -199,8 +200,8 @@
                             android:layout_marginTop="16dp"
                             app:trackCornerRadius="8dp"
                             app:trackThickness="12dp"
-                            app:indicatorColor="#EF4444"
-                            app:trackColor="#FEF2F2" />
+                            app:indicatorColor="@color/md_error"
+                            app:trackColor="@color/md_error_container" />
 
                     </LinearLayout>
 
@@ -213,7 +214,7 @@
                     android:text="Category Breakdown"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginBottom="8dp" />
 
                 <LinearLayout
@@ -230,7 +231,7 @@
                     android:text="Largest Files"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColor="?attr/colorOnSurface"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp" />
 

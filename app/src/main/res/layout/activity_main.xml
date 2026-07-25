@@ -40,7 +40,7 @@
                     android:contentInsetEndWithActions="0dp"
                     app:contentInsetStart="0dp"
                     app:contentInsetEnd="0dp"
-                    app:titleTextColor="#FFFFFF">
+                    app:titleTextColor="@color/text_on_hero">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -56,7 +56,7 @@
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="Open menu"
                             android:src="@drawable/ic_menu"
-                            app:tint="#FFFFFF" />
+                            app:tint="@color/text_on_hero" />
 
                         <com.example.clawlessexplorer.TypeWriterTextView
                             android:id="@+id/tvTypewriter"
@@ -69,7 +69,7 @@
                             android:shadowDx="0"
                             android:shadowDy="2"
                             android:shadowRadius="6"
-                            android:textColor="#FFFFFF"
+                            android:textColor="@color/text_on_hero"
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
@@ -82,7 +82,7 @@
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="Settings"
                             android:src="@drawable/ic_settings"
-                            app:tint="#FFFFFF" />
+                            app:tint="@color/text_on_hero" />
 
                         <ImageButton
                             android:id="@+id/btnSearch"
@@ -94,7 +94,7 @@
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="Search"
                             android:src="@drawable/ic_search"
-                            app:tint="#FFFFFF" />
+                            app:tint="@color/text_on_hero" />
                     </RelativeLayout>
                 </androidx.appcompat.widget.Toolbar>
 
@@ -125,7 +125,7 @@
                             android:layout_width="6dp"
                             android:layout_height="6dp"
                             android:background="@drawable/bg_badge_circle"
-                            android:backgroundTint="#00C8B4" />
+                                    android:backgroundTint="@color/brand_teal" />
 
                         <TextView
                             android:id="@+id/storagePillLabel"
@@ -138,7 +138,7 @@
                             android:letterSpacing="-0.01"
                             android:maxLines="1"
                             android:text="Internal · 38.4 GB free"
-                            android:textColor="#FFFFFF"
+                            android:textColor="@color/text_on_hero"
                             android:textSize="13sp" />
 
                         <ImageView
@@ -148,7 +148,7 @@
                             android:layout_marginStart="6dp"
                             android:src="@drawable/ic_chevron_right"
                             android:rotation="90"
-                            app:tint="#FFFFFF" />
+                            app:tint="@color/text_on_hero" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -185,7 +185,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:letterSpacing="0.04"
                                 android:text="STORAGE"
-                                android:textColor="#FFFFFF"
+                                android:textColor="@color/text_on_hero"
                                 android:textSize="11sp" />
 
                             <TextView
@@ -195,7 +195,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:letterSpacing="0.02"
                                 android:text="Loading..."
-                                android:textColor="#E6FFFFFF"
+                                android:textColor="@color/text_on_hero_secondary"
                                 android:textSize="12sp" />
 
                             <ImageView
@@ -205,7 +205,7 @@
                                 android:layout_marginStart="6dp"
                                 android:src="@drawable/ic_chevron_right"
                                 android:rotation="-90"
-                                app:tint="#FFFFFF" />
+                                app:tint="@color/text_on_hero" />
                         </LinearLayout>
 
                         <TextView
@@ -215,7 +215,7 @@
                             android:fontFamily="sans-serif-black"
                             android:letterSpacing="-0.02"
                             android:text="Internal Storage"
-                            android:textColor="#FFFFFF"
+                            android:textColor="@color/text_on_hero"
                             android:textSize="22sp" />
 
                         <!-- Stacked horizontal bar (file-type breakdown) -->
@@ -234,35 +234,35 @@
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0"
-                                android:background="#FF6B9D" />
+                                android:background="@color/brand_pink" />
 
                             <View
                                 android:id="@+id/segVideo"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0"
-                                android:background="#00C8B4" />
+                                android:background="@color/brand_teal" />
 
                             <View
                                 android:id="@+id/segAudio"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0"
-                                android:background="#F59E0B" />
+                                android:background="@color/semantic_warning" />
 
                             <View
                                 android:id="@+id/segDocs"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0"
-                                android:background="#3B82F6" />
+                                android:background="@color/semantic_info" />
 
                             <View
                                 android:id="@+id/segArchive"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="0"
-                                android:background="#F97316" />
+                                android:background="@color/file_archive" />
 
                             <View
                                 android:id="@+id/segOther"
@@ -290,7 +290,7 @@
                                     android:layout_width="8dp"
                                     android:layout_height="8dp"
                                     android:background="@drawable/bg_badge_circle"
-                                    android:backgroundTint="#FF6B9D" />
+                                    android:backgroundTint="@color/brand_pink" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
@@ -305,7 +305,7 @@
                                         android:fontFamily="sans-serif-medium"
                                         android:letterSpacing="-0.01"
                                         android:text="0 B"
-                                        android:textColor="#FFFFFF"
+                                        android:textColor="@color/text_on_hero"
                                         android:textSize="14sp" />
 
                                     <TextView
@@ -314,7 +314,7 @@
                                         android:fontFamily="sans-serif"
                                         android:letterSpacing="0.04"
                                         android:text="IMAGES"
-                                        android:textColor="#B3FFFFFF"
+                                        android:textColor="@color/text_on_hero_tertiary"
                                         android:textSize="10sp" />
                                 </LinearLayout>
                             </LinearLayout>
@@ -330,7 +330,7 @@
                                     android:layout_width="8dp"
                                     android:layout_height="8dp"
                                     android:background="@drawable/bg_badge_circle"
-                                    android:backgroundTint="#00C8B4" />
+                    android:backgroundTint="@color/brand_teal" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
@@ -345,7 +345,7 @@
                                         android:fontFamily="sans-serif-medium"
                                         android:letterSpacing="-0.01"
                                         android:text="0 B"
-                                        android:textColor="#FFFFFF"
+                                        android:textColor="@color/text_on_hero"
                                         android:textSize="14sp" />
 
                                     <TextView
@@ -354,7 +354,7 @@
                                         android:fontFamily="sans-serif"
                                         android:letterSpacing="0.04"
                                         android:text="VIDEOS"
-                                        android:textColor="#B3FFFFFF"
+                                        android:textColor="@color/text_on_hero_tertiary"
                                         android:textSize="10sp" />
                                 </LinearLayout>
                             </LinearLayout>
@@ -370,7 +370,7 @@
                                     android:layout_width="8dp"
                                     android:layout_height="8dp"
                                     android:background="@drawable/bg_badge_circle"
-                                    android:backgroundTint="#F59E0B" />
+                                    android:backgroundTint="@color/semantic_warning" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
@@ -385,7 +385,7 @@
                                         android:fontFamily="sans-serif-medium"
                                         android:letterSpacing="-0.01"
                                         android:text="0 B"
-                                        android:textColor="#FFFFFF"
+                                        android:textColor="@color/text_on_hero"
                                         android:textSize="14sp" />
 
                                     <TextView
@@ -394,7 +394,7 @@
                                         android:fontFamily="sans-serif"
                                         android:letterSpacing="0.04"
                                         android:text="AUDIO"
-                                        android:textColor="#B3FFFFFF"
+                                        android:textColor="@color/text_on_hero_tertiary"
                                         android:textSize="10sp" />
                                 </LinearLayout>
                             </LinearLayout>

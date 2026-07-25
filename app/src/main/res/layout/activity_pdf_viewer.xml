@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@android:color/black"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -91,8 +91,8 @@
             android:id="@+id/horizontalScroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#000000"
-            android:scrollbars="none">
+        android:background="@android:color/black"
+        android:scrollbars="none">
 
             <com.example.clawlessexplorer.PdfRendererView
                 android:id="@+id/pdfView"
@@ -114,7 +114,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#CC0E0F18"
+        android:background="@color/dark_surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="8dp"

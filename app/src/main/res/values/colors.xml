@@ -45,6 +45,21 @@
     <color name="semantic_warning">#F59E0B</color>
     <color name="semantic_info">#3B82F6</color>
 
+    <!-- ============ DARK THEME OVERRIDES ============ -->
+    <color name="dark_background">#0E0F18</color>
+    <color name="dark_surface">#12131C</color>
+    <color name="dark_surface_high">#1E1F28</color>
+    <color name="dark_on_surface">#E8E9F0</color>
+    <color name="dark_on_surface_muted">#80FFFFFF</color>
+    <color name="dark_on_surface_dim">#3D3F4D</color>
+    <color name="divider_on_dark">#33FFFFFF</color>
+
+    <!-- ============ TEXT ON GRADIENT ============ -->
+    <color name="text_on_hero">#FFFFFF</color>
+    <color name="text_on_hero_secondary">#E6FFFFFF</color>
+    <color name="text_on_hero_tertiary">#B3FFFFFF</color>
+    <color name="text_on_hero_dim">#66FFFFFF</color>
+
     <!-- ============ FILE TYPE ACCENTS ============ -->
     <color name="file_folder">#F59E0B</color>
     <color name="file_folder_bg">#FEF3C7</color>

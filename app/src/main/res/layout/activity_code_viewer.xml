@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0E0F18"
+    android:background="@color/dark_background"
     android:fitsSystemWindows="true">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -75,7 +75,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif"
-                            android:textColor="#B3FFFFFF"
+                            android:textColor="@color/text_on_hero_tertiary"
                             android:textSize="12sp"
                             tools:text="248 lines" />
                     </LinearLayout>
@@ -98,7 +98,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#1A0E0F18"
+                android:background="@color/dark_surface"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingHorizontal="12dp"
@@ -118,9 +118,9 @@
                     app:boxCornerRadiusTopStart="20dp"
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
-                    app:hintTextColor="#80FFFFFF"
+                    app:hintTextColor="@color/dark_on_surface_muted"
                     app:startIconDrawable="@drawable/ic_search"
-                    app:startIconTint="#80FFFFFF">
+                    app:startIconTint="@color/dark_on_surface_muted">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/searchInput"
@@ -130,7 +130,7 @@
                         android:imeOptions="actionSearch|flagNoExtractUi"
                         android:inputType="textNoSuggestions"
                         android:maxLines="1"
-                        android:textColor="#E8E9F0"
+                        android:textColor="@color/dark_on_surface"
                         android:textColorHint="#66FFFFFF"
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -145,7 +145,7 @@
                     android:src="@drawable/ic_chevron_right"
                     android:rotation="90"
                     android:visibility="gone"
-                    app:tint="#B3FFFFFF" />
+                    app:tint="@color/text_on_hero_tertiary" />
 
                 <ImageButton
                     android:id="@+id/btnFindNext"
@@ -157,7 +157,7 @@
                     android:rotation="270"
                     android:src="@drawable/ic_chevron_right"
                     android:visibility="gone"
-                    app:tint="#B3FFFFFF" />
+                    app:tint="@color/text_on_hero_tertiary" />
 
                 <TextView
                     android:id="@+id/searchCountText"
@@ -165,7 +165,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:fontFamily="sans-serif"
-                    android:textColor="#80FFFFFF"
+                    android:textColor="@color/dark_on_surface_muted"
                     android:textSize="11sp"
                     android:visibility="gone"
                     tools:text="1/5" />
@@ -174,7 +174,7 @@
                     android:layout_width="1dp"
                     android:layout_height="20dp"
                     android:layout_marginHorizontal="6dp"
-                    android:background="#33FFFFFF" />
+                    android:background="@color/divider_on_dark" />
 
                 <TextView
                     android:id="@+id/btnWrap"
@@ -184,7 +184,7 @@
                     android:gravity="center"
                     android:paddingHorizontal="10dp"
                     android:text="Wrap"
-                    android:textColor="#80FFFFFF"
+                    android:textColor="@color/dark_on_surface_muted"
                     android:textSize="12sp"
                     app:fontFamily="sans-serif-medium" />
 
@@ -196,7 +196,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:gravity="center"
                     android:text="A−"
-                    android:textColor="#80FFFFFF"
+                    android:textColor="@color/dark_on_surface_muted"
                     android:textSize="13sp"
                     app:fontFamily="sans-serif-medium" />
 
@@ -208,7 +208,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:gravity="center"
                     android:text="A+"
-                    android:textColor="#80FFFFFF"
+                    android:textColor="@color/dark_on_surface_muted"
                     android:textSize="13sp"
                     app:fontFamily="sans-serif-medium" />
             </LinearLayout>
@@ -221,7 +221,7 @@
         android:id="@+id/horizontalScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#0E0F18"
+        android:background="@color/dark_background"
         android:fillViewport="true"
         android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
@@ -235,14 +235,14 @@
                 android:id="@+id/lineNumbers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="#0E0F18"
+                android:background="@color/dark_background"
                 android:fontFamily="monospace"
                 android:gravity="end"
                 android:paddingEnd="12dp"
                 android:paddingStart="16dp"
                 android:paddingTop="12dp"
                 android:paddingBottom="32dp"
-                android:textColor="#3D3F4D"
+                android:textColor="@color/dark_on_surface_dim"
                 android:textIsSelectable="false"
                 android:textSize="12sp" />
 
@@ -251,13 +251,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="#0E0F18"
+                android:background="@color/dark_background"
                 android:fontFamily="monospace"
                 android:paddingEnd="24dp"
                 android:paddingStart="12dp"
                 android:paddingTop="12dp"
                 android:paddingBottom="32dp"
-                android:textColor="#E8E9F0"
+                android:textColor="@color/dark_on_surface"
                 android:textIsSelectable="true"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -283,7 +283,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="#1A0E0F18"
+        android:background="@color/dark_surface"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="8dp"
@@ -296,11 +296,11 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:text="Copy All"
-            android:textColor="#B3FFFFFF"
+            android:textColor="@color/text_on_hero_tertiary"
             android:textSize="12sp"
             app:icon="@drawable/ic_content_copy"
             app:iconSize="16dp"
-            app:iconTint="#B3FFFFFF" />
+            app:iconTint="@color/text_on_hero_tertiary" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareBottom"
@@ -309,11 +309,11 @@
             android:layout_height="36dp"
             android:layout_marginStart="4dp"
             android:text="Share"
-            android:textColor="#B3FFFFFF"
+            android:textColor="@color/text_on_hero_tertiary"
             android:textSize="12sp"
             app:icon="@drawable/ic_share"
             app:iconSize="16dp"
-            app:iconTint="#B3FFFFFF" />
+            app:iconTint="@color/text_on_hero_tertiary" />
 
         <View
             android:layout_width="0dp"
@@ -326,7 +326,7 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:text="Prev"
-            android:textColor="#B3FFFFFF"
+            android:textColor="@color/text_on_hero_tertiary"
             android:textSize="12sp"
             android:visibility="gone" />
 
@@ -336,7 +336,7 @@
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:text="Next"
-            android:textColor="#B3FFFFFF"
+            android:textColor="@color/text_on_hero_tertiary"
             android:textSize="12sp"
             android:visibility="gone" />
     </LinearLayout>
