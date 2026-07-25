@@ -859,6 +859,24 @@ class MainActivity : AppCompatActivity() {
             btnView.visibility = View.GONE
         }
 
+        // Run in Terminal — show for script and binary files
+        val btnRunInTerminal = view.findViewById<View>(R.id.btnRunInTerminal)
+        val scriptExtensions = setOf("sh", "bash", "zsh", "py", "pl", "rb")
+        val isRunable = !file.isDirectory && (
+            file.extension.lowercase() in scriptExtensions ||
+            file.canExecute() ||
+            file.extension.lowercase().isEmpty()
+        )
+        if (isRunable) {
+            btnRunInTerminal.visibility = View.VISIBLE
+            btnRunInTerminal.setOnClickListener {
+                startActivity(TerminalActivity.intent(this, file.absolutePath))
+                dialog.dismiss()
+            }
+        } else {
+            btnRunInTerminal.visibility = View.GONE
+        }
+
         // Compress — show for any file/folder
         val btnCompress = view.findViewById<View>(R.id.btnCompress)
         btnCompress.setOnClickListener {
@@ -876,6 +894,166 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             btnExtract.visibility = View.GONE
+        }
+
+        // Open With — show for all non-directory files
+        val btnOpenWith = view.findViewById<View>(R.id.btnOpenWith)
+        if (!file.isDirectory) {
+            btnOpenWith.visibility = View.VISIBLE
+            btnOpenWith.setOnClickListener {
+                try {
+                    val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, getMimeType(file))
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(intent, "Open ${file.name} with…"))
+                } catch (e: Exception) {
+                    Toast.makeText(this, "No apps available to open this file", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+        } else {
+            btnOpenWith.visibility = View.GONE
+        }
+
+        // Duplicate — show for all files (not directories)
+        val btnDuplicate = view.findViewById<View>(R.id.btnDuplicate)
+        if (!file.isDirectory) {
+            btnDuplicate.visibility = View.VISIBLE
+            btnDuplicate.setOnClickListener {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val result = withContext(Dispatchers.IO) {
+                        try {
+                            val parent = file.parentFile ?: return@withContext Result.failure(Exception("No parent directory"))
+                            val nameWithoutExt = file.nameWithoutExtension
+                            val ext = file.extension.ifEmpty { null }
+                            var targetName = if (ext != null) "$nameWithoutExt (copy).$ext" else "${file.name} (copy)"
+                            var target = File(parent, targetName)
+                            var copyNum = 2
+                            while (target.exists()) {
+                                targetName = if (ext != null) "$nameWithoutExt (copy $copyNum).$ext" else "${file.name} (copy $copyNum)"
+                                target = File(parent, targetName)
+                                copyNum++
+                            }
+                            val success = file.copyTo(target).exists()
+                            if (success) Result.success(target) else Result.failure(Exception("Copy failed"))
+                        } catch (e: Exception) {
+                            Result.failure(e)
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        result.onSuccess { newFile ->
+                            val snack = com.google.android.material.snackbar.Snackbar.make(
+                                binding.root,
+                                "Created ${newFile.name}",
+                                com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                            )
+                            snack.anchorView = binding.fabAdd
+                            snack.setAction("Undo") {
+                                newFile.delete()
+                                loadFiles(currentPath)
+                            }
+                            snack.show()
+                            loadFiles(currentPath)
+                        }.onFailure {
+                            com.google.android.material.snackbar.Snackbar.make(
+                                binding.root,
+                                "Failed to duplicate: ${it.message}",
+                                com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                            ).apply {
+                                anchorView = binding.fabAdd
+                                show()
+                            }
+                        }
+                    }
+                }
+                dialog.dismiss()
+            }
+        } else {
+            btnDuplicate.visibility = View.GONE
+        }
+
+        // Compress & Share — show for all non-directory files
+        val btnCompressShare = view.findViewById<View>(R.id.btnCompressShare)
+        if (!file.isDirectory) {
+            btnCompressShare.visibility = View.VISIBLE
+            btnCompressShare.setOnClickListener {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val cacheDir = File(cacheDir, "shared_zips")
+                        cacheDir.mkdirs()
+                        val zipFile = File(cacheDir, "${file.nameWithoutExtension}.zip")
+                        if (zipFile.exists()) zipFile.delete()
+
+                        java.util.zip.ZipOutputStream(zipFile.outputStream().buffered()).use { zos ->
+                            val entry = java.util.zip.ZipEntry(file.name)
+                            zos.putNextEntry(entry)
+                            file.inputStream().use { it.copyTo(zos) }
+                            zos.closeEntry()
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            val uri = FileProvider.getUriForFile(this@MainActivity, "$packageName.provider", zipFile)
+                            val intent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/zip"
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            startActivity(Intent.createChooser(intent, "Share ${zipFile.name}"))
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "Failed to compress: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+                Toast.makeText(this, "Preparing zip…", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+        } else {
+            btnCompressShare.visibility = View.GONE
+        }
+
+        // Create Shortcut — API 26+ only
+        val btnCreateShortcut = view.findViewById<View>(R.id.btnCreateShortcut)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val shortcutManager = getSystemService(android.content.pm.ShortcutManager::class.java)
+            if (shortcutManager.isRequestPinShortcutSupported) {
+                btnCreateShortcut.visibility = View.VISIBLE
+                btnCreateShortcut.setOnClickListener {
+                    try {
+                        val uri = FileProvider.getUriForFile(this, "$packageName.provider", file)
+                        val shortcutIntent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, getMimeType(file))
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        val shortcut = android.content.pm.ShortcutInfo.Builder(this, "file_${file.absolutePath.hashCode()}")
+                            .setShortLabel(file.name)
+                            .setLongLabel(file.absolutePath)
+                            .setIcon(android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_file_generic))
+                            .setIntent(shortcutIntent)
+                            .build()
+                        shortcutManager.requestPinShortcut(shortcut, null)
+                        Toast.makeText(this, "Shortcut for ${file.name} added to home screen", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this, "Failed to create shortcut: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    dialog.dismiss()
+                }
+            } else {
+                btnCreateShortcut.visibility = View.GONE
+            }
+        } else {
+            btnCreateShortcut.visibility = View.GONE
+        }
+
+        // File Info — always visible
+        view.findViewById<View>(R.id.btnFileInfo).setOnClickListener {
+            showFileInfoDialog(file)
+            dialog.dismiss()
         }
 
         dialog.setContentView(view)
@@ -1059,6 +1237,11 @@ class MainActivity : AppCompatActivity() {
                 startActivity(MediaViewerActivity.intent(this, file.absolutePath, "audio"))
             }
 
+            // PDF → built-in PDF viewer
+            ext == "pdf" -> {
+                startActivity(PdfViewerActivity.intent(this, file.absolutePath))
+            }
+
             // APK → built-in APK info viewer
             ext == "apk" -> {
                 startActivity(ApkViewerActivity.intent(this, file.absolutePath))
@@ -1238,6 +1421,129 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "Cannot lock root directory", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showFileInfoDialog(file: File) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val fileSize = if (file.isDirectory) {
+                var total = 0L
+                var count = 0
+                try {
+                    file.walkTopDown().forEach { f ->
+                        if (f.isFile) {
+                            total += f.length()
+                            count++
+                        }
+                    }
+                } catch (_: Exception) {}
+                "$count files, ${Formatter.formatShortFileSize(this@MainActivity, total)} total"
+            } else {
+                val bytes = file.length()
+                val kb = bytes / 1024.0
+                val mb = kb / 1024.0
+                val gb = mb / 1024.0
+                "${Formatter.formatShortFileSize(this@MainActivity, bytes)} (${"%.2f".format(kb)} KB / ${"%.2f".format(mb)} MB / ${"%.2f".format(gb)} GB)"
+            }
+
+            val createdDate = try {
+                val attrs = java.nio.file.Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes::class.java)
+                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(attrs.creationTime().toMillis()))
+            } catch (_: Exception) { "Unknown" }
+
+            val modifiedDate = try {
+                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(file.lastModified()))
+            } catch (_: Exception) { "Unknown" }
+
+            val lastAccessedDate = try {
+                val attrs = java.nio.file.Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes::class.java)
+                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(attrs.lastAccessTime().toMillis()))
+            } catch (_: Exception) { "Unknown" }
+
+            val permissions = try {
+                val r = if (file.canRead()) "r" else "-"
+                val w = if (file.canWrite()) "w" else "-"
+                val x = if (file.canExecute()) "x" else "-"
+                "$r$w$x"
+            } catch (_: Exception) { "???" }
+
+            val mimeType = getMimeType(file)
+            val nameWithoutExt = file.nameWithoutExtension
+            val ext = file.extension.ifEmpty { "(none)" }
+
+            val info = buildString {
+                appendLine("Full Path: ${file.absolutePath}")
+                appendLine("File Name: ${file.name}")
+                appendLine("Name (no ext): $nameWithoutExt")
+                appendLine("Extension: $ext")
+                appendLine("Type: ${if (file.isDirectory) "Directory" else "File"}")
+                appendLine("Size: $fileSize")
+                appendLine("Created: $createdDate")
+                appendLine("Modified: $modifiedDate")
+                appendLine("Last Accessed: $lastAccessedDate")
+                appendLine("Permissions: $permissions")
+                appendLine("MIME Type: $mimeType")
+            }
+
+            withContext(Dispatchers.Main) {
+                val scrollView = android.widget.ScrollView(this@MainActivity)
+                val textView = TextView(this@MainActivity).apply {
+                    text = info.trimEnd()
+                    setPadding(48, 24, 48, 8)
+                    textSize = 13f
+                    typeface = android.graphics.Typeface.MONOSPACE
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
+                }
+                scrollView.addView(textView)
+
+                val dialog = MaterialAlertDialogBuilder(this@MainActivity)
+                    .setTitle("File Info — ${file.name}")
+                    .setView(scrollView)
+
+                if (!file.isDirectory) {
+                    dialog.setPositiveButton("Calculate MD5") { d, _ ->
+                        d.dismiss()
+                        lifecycleScope.launch(Dispatchers.IO) {
+                            try {
+                                val md = java.security.MessageDigest.getInstance("MD5")
+                                file.inputStream().use { input ->
+                                    val buffer = ByteArray(8192)
+                                    var read: Int
+                                    while (input.read(buffer).also { read = it } != -1) {
+                                        md.update(buffer, 0, read)
+                                    }
+                                }
+                                val hash = md.digest().joinToString("") { "%02x".format(it) }
+                                withContext(Dispatchers.Main) {
+                                    val hashText = TextView(this@MainActivity).apply {
+                                        text = "MD5: $hash"
+                                        setPadding(48, 24, 48, 24)
+                                        textSize = 13f
+                                        typeface = android.graphics.Typeface.MONOSPACE
+                                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
+                                    }
+                                    MaterialAlertDialogBuilder(this@MainActivity)
+                                        .setTitle("MD5 Hash")
+                                        .setView(hashText)
+                                        .setPositiveButton("Copy") { _, _ ->
+                                            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("md5", hash))
+                                            Toast.makeText(this@MainActivity, "MD5 copied to clipboard", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .setNegativeButton("Close", null)
+                                        .show()
+                                }
+                            } catch (e: Exception) {
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(this@MainActivity, "Failed to calculate MD5: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                dialog.setNegativeButton("Close", null).show()
+            }
         }
     }
 

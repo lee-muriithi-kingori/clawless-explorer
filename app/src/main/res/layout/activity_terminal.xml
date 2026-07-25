@@ -79,6 +79,19 @@
         </androidx.appcompat.widget.Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Working directory display -->
+    <TextView
+        android:id="@+id/tvWorkDir"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#12131C"
+        android:fontFamily="monospace"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
+        android:text="~"
+        android:textColor="#6B7280"
+        android:textSize="11sp" />
+
     <!-- Quick command chips -->
     <HorizontalScrollView
         android:id="@+id/quickCommands"
@@ -110,6 +123,66 @@
             android:textIsSelectable="true"
             android:textSize="12sp" />
     </ScrollView>
+
+    <!-- Quick Actions Bar -->
+    <LinearLayout
+        android:id="@+id/quickActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#12131C"
+        android:orientation="horizontal"
+        android:paddingVertical="6dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="4dp">
+
+        <TextView
+            android:id="@+id/btnRunScript"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_badge_code"
+            android:drawableStart="@drawable/ic_play"
+            android:drawablePadding="4dp"
+            android:drawableTint="#10B981"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:text="Run Script"
+            android:textColor="#10B981"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnSaveLog"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_badge_document"
+            android:drawableStart="@drawable/ic_content_copy"
+            android:drawablePadding="4dp"
+            android:drawableTint="#6366F1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:text="Save Log"
+            android:textColor="#6366F1"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnShareLog"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_badge_image"
+            android:drawableStart="@drawable/ic_share"
+            android:drawablePadding="4dp"
+            android:drawableTint="#F59E0B"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:text="Share"
+            android:textColor="#F59E0B"
+            android:textSize="12sp" />
+
+    </LinearLayout>
 
     <View
         android:layout_width="match_parent"

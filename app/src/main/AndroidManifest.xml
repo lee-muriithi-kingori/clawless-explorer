@@ -109,6 +109,12 @@
             android:parentActivityName=".UtilsHubActivity" />
 
         <activity
+            android:name=".PdfViewerActivity"
+            android:exported="false"
+            android:label="PDF Viewer"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".StorageAnalyzerActivity"
             android:exported="false"
             android:label="Storage Analyzer"

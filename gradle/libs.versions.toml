@@ -15,6 +15,7 @@ coil = "2.5.0"
 gson = "2.10.1"
 ktor = "2.3.7"
 swiperefresh = "1.1.0"
+pdfium = "1.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +35,7 @@ ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty-jvm", version
 ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation-jvm", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json-jvm", version.ref = "ktor" }
 androidx-swiperefresh = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefresh" }
+pdfium = { group = "com.github.barteksc", name = "pdfium-android", version.ref = "pdfium" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
