@@ -34,7 +34,9 @@ class UtilsHubActivity : AppCompatActivity() {
             ToolItem(R.drawable.ic_tool_color_picker, "Color Picker", "Pick colors, view hex/RGB values", ToolType.COLOR),
             ToolItem(R.drawable.ic_tool_network, "IP Info", "Show device IP and hostname", ToolType.IP),
             ToolItem(R.drawable.ic_tool_diff, "Text Diff", "Compare two text inputs side by side", ToolType.DIFF),
-            ToolItem(R.drawable.ic_tool_regex, "Regex Tester", "Test regex patterns in real time", ToolType.REGEX)
+            ToolItem(R.drawable.ic_tool_regex, "Regex Tester", "Test regex patterns in real time", ToolType.REGEX),
+            ToolItem(R.drawable.ic_tool_zip, "Zip Compress", "Compress files into a .zip archive", ToolType.ZIP),
+            ToolItem(R.drawable.ic_tool_extract, "Zip Extract", "Extract .zip archive contents", ToolType.EXTRACT)
         )
 
         binding.toolsGrid.layoutManager = GridLayoutManager(this, 2)
@@ -51,6 +53,8 @@ class UtilsHubActivity : AppCompatActivity() {
                 ToolType.IP -> showIpInfoDialog()
                 ToolType.DIFF -> showTextDiffDialog()
                 ToolType.REGEX -> showRegexTesterDialog()
+                ToolType.ZIP -> startActivity(ZipToolsActivity.intent(this, "compress"))
+                ToolType.EXTRACT -> startActivity(ZipToolsActivity.intent(this, "extract"))
             }
         }
     }
@@ -210,7 +214,7 @@ class UtilsHubActivity : AppCompatActivity() {
     )
 
     private enum class ToolType {
-        BASE64, URL, JSON, HASH, COLOR, IP, DIFF, REGEX
+        BASE64, URL, JSON, HASH, COLOR, IP, DIFF, REGEX, ZIP, EXTRACT
     }
 
     private class ToolAdapter(

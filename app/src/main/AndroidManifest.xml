@@ -90,6 +90,12 @@
             android:label="JSON Formatter"
             android:parentActivityName=".UtilsHubActivity" />
 
+        <activity
+            android:name=".ZipToolsActivity"
+            android:exported="false"
+            android:label="Zip Tools"
+            android:parentActivityName=".UtilsHubActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

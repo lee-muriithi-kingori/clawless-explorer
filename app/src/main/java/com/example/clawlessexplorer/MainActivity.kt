@@ -833,6 +833,25 @@ class MainActivity : AppCompatActivity() {
             btnView.visibility = View.GONE
         }
 
+        // Compress — show for any file/folder
+        val btnCompress = view.findViewById<View>(R.id.btnCompress)
+        btnCompress.setOnClickListener {
+            startActivity(ZipToolsActivity.intent(this, "compress", file.absolutePath))
+            dialog.dismiss()
+        }
+
+        // Extract — show only for .zip files
+        val btnExtract = view.findViewById<View>(R.id.btnExtract)
+        if (!file.isDirectory && file.extension.lowercase() in listOf("zip")) {
+            btnExtract.visibility = View.VISIBLE
+            btnExtract.setOnClickListener {
+                startActivity(ZipToolsActivity.intent(this, "extract", file.absolutePath))
+                dialog.dismiss()
+            }
+        } else {
+            btnExtract.visibility = View.GONE
+        }
+
         dialog.setContentView(view)
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.show()
