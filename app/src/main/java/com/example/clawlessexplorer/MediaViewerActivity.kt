@@ -258,7 +258,7 @@ class MediaViewerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
-        mediaPlayer?.release()
+        try { mediaPlayer?.release() } catch (_: IllegalStateException) {}
         mediaPlayer = null
     }
 

@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private var fileServer: FileServer? = null
     private var sortType: SortType = SortType.NAME
     private var isRootMode: Boolean = false
+    private var isGridView = false
 
     enum class SortType { NAME, DATE, SIZE }
 
@@ -86,6 +87,14 @@ class MainActivity : AppCompatActivity() {
         showHiddenFiles = settings.showHiddenByDefault
         isRootMode = settings.rootMode
 
+        // Restore state after rotation
+        savedInstanceState?.let {
+            currentPath = File(it.getString("current_path") ?: currentPath.absolutePath)
+            showHiddenFiles = it.getBoolean("show_hidden", showHiddenFiles)
+            isRootMode = it.getBoolean("root_mode", isRootMode)
+            sortType = try { SortType.valueOf(it.getString("sort_type") ?: "NAME") } catch (_: Exception) { SortType.NAME }
+        }
+
         setupEdgeToEdge()
         setupToolbar()
         setupStorageCard()
@@ -102,6 +111,21 @@ class MainActivity : AppCompatActivity() {
         setupFabScrollBehavior()
         setupAnimatedBackground()
         updateStorageInfo()
+
+        // Check MANAGE_EXTERNAL_STORAGE for Android 11+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("Storage Access")
+                    .setMessage("This app needs access to all files to function as a file manager. Grant permission?")
+                    .setPositiveButton("Grant") { _, _ ->
+                        startActivity(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
+                    }
+                    .setNegativeButton("Continue anyway", null)
+                    .show()
+            }
+        }
+
         checkPermissionsAndLoadFiles()
         if (settings.serverEnabled) startFileServer()
 
@@ -128,6 +152,14 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         fileServer?.stop()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("current_path", currentPath.absolutePath)
+        outState.putBoolean("show_hidden", showHiddenFiles)
+        outState.putBoolean("root_mode", isRootMode)
+        outState.putString("sort_type", sortType.name)
     }
 
     private fun setupBackPress() {
@@ -510,6 +542,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.fabAdd.setOnClickListener { showCreateOptions() }
+
+        // Grid/List view toggle
+        binding.btnViewToggle.setOnClickListener {
+            isGridView = !isGridView
+            binding.recyclerView.layoutManager = if (isGridView) {
+                androidx.recyclerview.widget.GridLayoutManager(this, 3)
+            } else {
+                androidx.recyclerview.widget.LinearLayoutManager(this)
+            }
+            binding.recyclerView.adapter = adapter
+            loadFiles(currentPath)
+        }
     }
 
     private fun toggleSearch() {
@@ -622,7 +666,22 @@ class MainActivity : AppCompatActivity() {
     private fun setupSelectionBar() {
         binding.selectionDelete.setOnClickListener { deleteSelectedFiles() }
         binding.selectionShare.setOnClickListener { shareSelectedFiles() }
-        binding.selectionCopy.setOnClickListener { copySelectedToClipboard() }
+        binding.selectionCopy.setOnClickListener {
+            FileClipboard.copy(adapter.getSelectedFiles().toList(), currentPath)
+            adapter.clearSelection()
+            binding.selectionBar.visibility = View.GONE
+            com.google.android.material.snackbar.Snackbar.make(binding.root, "${FileClipboard.files.size} file(s) copied", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
+                .setAction("Paste") { pasteFiles() }
+                .show()
+        }
+        binding.selectionMove.setOnClickListener {
+            FileClipboard.move(adapter.getSelectedFiles().toList(), currentPath)
+            adapter.clearSelection()
+            binding.selectionBar.visibility = View.GONE
+            com.google.android.material.snackbar.Snackbar.make(binding.root, "${FileClipboard.files.size} file(s) cut", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT)
+                .setAction("Paste") { pasteFiles() }
+                .show()
+        }
         binding.selectionSelectAll.setOnClickListener {
             adapter.selectAll()
         }
@@ -653,6 +712,18 @@ class MainActivity : AppCompatActivity() {
         val clip = android.content.ClipData.newPlainText("File paths", paths)
         clipboard.setPrimaryClip(clip)
         Toast.makeText(this, "Copied ${selected.size} path(s)", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun pasteFiles() {
+        if (!FileClipboard.hasContent) return
+        val (success, failures) = FileClipboard.paste(currentPath)
+        if (success.isNotEmpty()) {
+            loadFiles(currentPath)
+            com.google.android.material.snackbar.Snackbar.make(binding.root, "${success.size} file(s) pasted", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show()
+        }
+        if (failures.isNotEmpty()) {
+            com.google.android.material.snackbar.Snackbar.make(binding.root, failures.joinToString("\n"), com.google.android.material.snackbar.Snackbar.LENGTH_LONG).show()
+        }
     }
 
     private fun startSpeechToText() {
@@ -869,8 +940,15 @@ class MainActivity : AppCompatActivity() {
             currentPath.walkTopDown().take(500).forEach { file ->
                 if (!file.isDirectory && file.length() <= maxFileSize && file.canRead()) {
                     try {
-                        if (file.readText().contains(query, ignoreCase = true)) {
-                            results.add(file)
+                        file.bufferedReader().use { reader ->
+                            var found = false
+                            while (!found) {
+                                val line = reader.readLine() ?: break
+                                if (line.contains(query, ignoreCase = true)) {
+                                    found = true
+                                    results.add(file)
+                                }
+                            }
                         }
                     } catch (_: Exception) { }
                 }
@@ -1995,6 +2073,10 @@ class MainActivity : AppCompatActivity() {
             loadFiles(directory)
             updateBreadcrumbs(directory)
             settings.addRecent(directory.absolutePath)
+            // Update custom breadcrumb view
+            binding.breadcrumb.setPath(directory) { file ->
+                navigateTo(file)
+            }
         }
     }
 
@@ -2157,6 +2239,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadFiles(directory: File) {
+        // Update breadcrumb navigation
+        binding.breadcrumb.setPath(currentPath) { file ->
+            navigateTo(file)
+        }
         lifecycleScope.launch(Dispatchers.IO) {
             var files = directory.listFiles()?.toList() ?: emptyList()
 
@@ -2221,6 +2307,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Show/hide paste option based on clipboard
+        if (FileClipboard.hasContent) {
+            // Clipboard has content — paste action available via snackbar after copy/move
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (Environment.isExternalStorageManager()) {
                 loadFiles(currentPath)

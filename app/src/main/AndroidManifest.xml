@@ -126,6 +126,10 @@
             android:label="Files"
             android:parentActivityName=".StorageAnalyzerActivity" />
 
+        <activity android:name=".TextEditorActivity" android:exported="false" android:theme="@style/Theme.ClawlessExplorer" />
+        <activity android:name=".GalleryActivity" android:exported="false" android:theme="@style/Theme.ClawlessExplorer" />
+        <activity android:name=".AppManagerActivity" android:exported="false" android:theme="@style/Theme.ClawlessExplorer" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

@@ -52,6 +52,8 @@ class HtmlViewerActivity : AppCompatActivity() {
             loadWithOverviewMode = true
             useWideViewPort = true
             allowFileAccess = true
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
         }
 
         webView.webViewClient = object : WebViewClient() {

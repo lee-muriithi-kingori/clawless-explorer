@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  */
 class TerminalSession {
 
+    @Volatile
     var cwd: File = Environment.getExternalStorageDirectory()
         private set
 
@@ -113,6 +114,7 @@ class TerminalSession {
                 .directory(cwd)
                 .redirectErrorStream(false)
                 .start()
+            process.outputStream.close()
 
             val stdoutJob = launch(Dispatchers.IO) {
                 BufferedReader(InputStreamReader(process.inputStream)).useLines { lines ->

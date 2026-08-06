@@ -226,7 +226,8 @@ class FileAdapter(
             isSelectionMode = false
         }
 
-        notifyItemChanged(filteredFiles.indexOf(file))
+        val idx = filteredFiles.indexOf(file)
+        if (idx >= 0) notifyItemChanged(idx)
         onSelectionChanged(selectedFiles.size)
     }
 
@@ -248,10 +249,12 @@ class FileAdapter(
     }
 
     fun updateFiles(newFiles: List<File>) {
+        val diff = DiffUtil.calculateDiff(FileDiffCallback(allFiles, newFiles))
         allFiles = newFiles
         selectedFiles.clear()
         isSelectionMode = false
-        applyFilters()
+        filteredFiles = allFiles.toMutableList()
+        diff.dispatchUpdatesTo(this)
     }
 
     class FileDiffCallback(

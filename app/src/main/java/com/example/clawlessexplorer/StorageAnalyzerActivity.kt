@@ -21,7 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clawlessexplorer.databinding.ActivityStorageAnalyzerBinding
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -100,11 +100,11 @@ class StorageAnalyzerActivity : AppCompatActivity() {
     }
 
     private fun startScan() {
-        if (isScanning.compareAndSet(false, true)) return
+        if (!isScanning.compareAndSet(false, true)) return
 
         showLoading(true)
 
-        scanJob = CoroutineScope(Dispatchers.IO).launch {
+        scanJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val stat = StatFs(startPath)
                 totalSpace = stat.totalBytes
@@ -114,7 +114,7 @@ class StorageAnalyzerActivity : AppCompatActivity() {
                 val filesByCategory = mutableMapOf<FileCategory, MutableList<FileInfo>>()
                 FileCategory.entries.forEach { filesByCategory[it] = mutableListOf() }
 
-                scanDirectory(File(startPath), filesByCategory)
+                scanDirectory(File(startPath), filesByCategory, depth = 0)
 
                 val categoryInfos = FileCategory.entries.mapNotNull { cat ->
                     val files = filesByCategory[cat]
@@ -155,8 +155,10 @@ class StorageAnalyzerActivity : AppCompatActivity() {
 
     private fun scanDirectory(
         directory: File,
-        filesByCategory: MutableMap<FileCategory, MutableList<FileInfo>>
+        filesByCategory: MutableMap<FileCategory, MutableList<FileInfo>>,
+        depth: Int = 0
     ) {
+        if (depth > 20) return
         try {
             val children = directory.listFiles() ?: return
             for (child in children) {
@@ -169,7 +171,7 @@ class StorageAnalyzerActivity : AppCompatActivity() {
                         filesByCategory[category]?.add(FileInfo(child, size, category))
                     }
                 } else if (child.isDirectory && !child.name.startsWith(".")) {
-                    scanDirectory(child, filesByCategory)
+                    scanDirectory(child, filesByCategory, depth + 1)
                 }
             }
         } catch (_: SecurityException) {

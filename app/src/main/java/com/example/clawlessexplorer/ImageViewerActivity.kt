@@ -178,6 +178,12 @@ class ImageViewerActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.topOverlay.removeCallbacks(hideOverlayRunnable)
+        binding.bottomOverlay.removeCallbacks(hideOverlayRunnable)
+    }
+
     companion object {
         const val EXTRA_PATH = "extra_image_path"
 

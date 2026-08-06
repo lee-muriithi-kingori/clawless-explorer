@@ -96,12 +96,22 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:layout_centerVertical="true"
-                            android:layout_toStartOf="@+id/btnSettings"
+                            android:layout_toStartOf="@+id/btnViewToggle"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="Toggle hidden files"
                             android:src="@drawable/ic_visibility_off"
                             app:tint="@color/text_on_hero"
                             android:alpha="0.7" />
+
+                        <ImageButton
+                            android:id="@+id/btnViewToggle"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@+id/btnSettings"
+                            android:src="@android:drawable/ic_menu_view"
+                            android:contentDescription="Toggle grid/list view"
+                            android:background="?attr/selectableItemBackgroundBorderless" />
 
                         <ImageButton
                             android:id="@+id/btnSettings"
@@ -618,6 +628,14 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
+        <!-- ========== BREADCRUMB CUSTOM VIEW ========== -->
+        <com.example.clawlessexplorer.BreadcrumbView
+            android:id="@+id/breadcrumb"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/md_surface_variant"
+            android:elevation="2dp" />
+
         <!-- ========== FILE LIST ========== -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefresh"
@@ -794,6 +812,16 @@
                     android:contentDescription="Copy"
                     android:padding="10dp"
                     android:src="@drawable/ic_content_copy"
+                    app:tint="?attr/colorOnSurface" />
+
+                <ImageButton
+                    android:id="@+id/selectionMove"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Move"
+                    android:padding="10dp"
+                    android:src="@android:drawable/ic_menu_crop"
                     app:tint="?attr/colorOnSurface" />
 
                 <ImageButton

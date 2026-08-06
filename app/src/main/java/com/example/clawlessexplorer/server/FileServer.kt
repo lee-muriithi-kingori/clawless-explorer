@@ -38,7 +38,10 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 get("/api/files") {
                     if (!requireAuth(call)) return@get
                     val path = call.request.queryParameters["path"] ?: "/"
-                    val directory = File(rootDir, path.trimStart('/'))
+                    val directory = resolveSafe(path) ?: run {
+                        call.respond(HttpStatusCode.Forbidden, "Path traversal blocked")
+                        return@get
+                    }
                     if (!directory.exists() || !directory.isDirectory) {
                         call.respond(emptyList<Map<String, Any>>())
                         return@get
@@ -62,7 +65,10 @@ class FileServer(private val rootDir: File, private val context: Context) {
                     if (!requireAuth(call)) return@get
                     val path = call.request.queryParameters["path"] ?: "/"
                     val maxDepth = (call.request.queryParameters["depth"]?.toIntOrNull() ?: 2).coerceIn(1, 6)
-                    val directory = File(rootDir, path.trimStart('/'))
+                    val directory = resolveSafe(path) ?: run {
+                        call.respond(HttpStatusCode.Forbidden, "Path traversal blocked")
+                        return@get
+                    }
                     val tree = if (directory.exists() && directory.isDirectory) {
                         buildTree(directory, maxDepth)
                     } else emptyMap()

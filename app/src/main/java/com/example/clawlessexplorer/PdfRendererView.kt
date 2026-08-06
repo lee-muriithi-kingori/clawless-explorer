@@ -23,6 +23,8 @@ class PdfRendererView @JvmOverloads constructor(
     private var pageBitmap: Bitmap? = null
     private var pageNumber: Int = 0
     private var zoom: Float = 1.0f
+    private var renderThread: Thread? = null
+    private var zoomAnimator: ValueAnimator? = null
     private var panX: Float = 0f
     private var panY: Float = 0f
     private var viewWidth: Int = 0
@@ -89,30 +91,37 @@ class PdfRendererView @JvmOverloads constructor(
 
     fun loadPage(core: PdfiumCore, doc: PdfDocument, page: Int) {
         pageNumber = page
+        renderThread?.interrupt()
 
         Thread {
+            renderThread = Thread.currentThread()
             try {
                 core.openPage(doc, page)
                 val pageWidth = core.getPageWidth(doc, page)
                 val pageHeight = core.getPageHeight(doc, page)
 
+                val cappedWidth = (pageWidth * renderScale).coerceAtMost(2048)
+                val cappedHeight = (pageHeight * renderScale).coerceAtMost(2048)
+
                 val bitmap = Bitmap.createBitmap(
-                    pageWidth * renderScale,
-                    pageHeight * renderScale,
+                    cappedWidth,
+                    cappedHeight,
                     Bitmap.Config.ARGB_8888
                 )
                 core.renderPageBitmap(
                     doc, bitmap, page,
                     0, 0,
-                    pageWidth * renderScale,
-                    pageHeight * renderScale
+                    cappedWidth,
+                    cappedHeight
                 )
 
+                pageBitmap?.recycle()
                 pageBitmap = bitmap
                 panX = 0f
                 panY = 0f
 
                 post {
+                    if (!isAttachedToWindow) return@post
                     zoom = if (viewWidth > 0 && bitmap.width > 0) {
                         (viewWidth.toFloat() / bitmap.width).coerceIn(minZoom, maxZoom)
                     } else {
@@ -193,6 +202,7 @@ class PdfRendererView @JvmOverloads constructor(
     }
 
     private fun animateZoomTo(targetZoom: Float, pivotX: Float, pivotY: Float) {
+        zoomAnimator?.cancel()
         val startZoom = zoom
         val startPanX = panX
         val startPanY = panY
@@ -200,9 +210,9 @@ class PdfRendererView @JvmOverloads constructor(
         val targetPanX = (pivotX - viewWidth / 2f) * (1f - factor) + factor * startPanX
         val targetPanY = (pivotY - viewHeight / 2f) * (1f - factor) + factor * startPanY
 
-        val animator = ValueAnimator.ofFloat(0f, 1f).setDuration(300)
-        animator.interpolator = DecelerateInterpolator()
-        animator.addUpdateListener { anim ->
+        zoomAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(300)
+        zoomAnimator?.interpolator = DecelerateInterpolator()
+        zoomAnimator?.addUpdateListener { anim ->
             val t = anim.animatedValue as Float
             zoom = startZoom + (targetZoom - startZoom) * t
             panX = startPanX + (targetPanX - startPanX) * t
@@ -210,6 +220,16 @@ class PdfRendererView @JvmOverloads constructor(
             constrainPan()
             invalidate()
         }
-        animator.start()
+        zoomAnimator?.start()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        renderThread?.interrupt()
+        renderThread = null
+        zoomAnimator?.cancel()
+        zoomAnimator = null
+        pageBitmap?.recycle()
+        pageBitmap = null
     }
 }

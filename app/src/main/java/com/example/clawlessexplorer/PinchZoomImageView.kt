@@ -32,6 +32,7 @@ class PinchZoomImageView @JvmOverloads constructor(
     private var minScale = 1f
     private var maxScale = 5f
     private var currentScale = 1f
+    private var scaleAnimator: ValueAnimator? = null
 
     private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
@@ -159,10 +160,11 @@ class PinchZoomImageView @JvmOverloads constructor(
     }
 
     private fun animateScaleTo(targetScale: Float, pivotX: Float = width / 2f, pivotY: Float = height / 2f) {
+        scaleAnimator?.cancel()
         val startScale = getCurrentScale()
-        val animator = ValueAnimator.ofFloat(0f, 1f).setDuration(300)
-        animator.interpolator = DecelerateInterpolator()
-        animator.addUpdateListener { anim ->
+        scaleAnimator = ValueAnimator.ofFloat(0f, 1f).setDuration(300)
+        scaleAnimator?.interpolator = DecelerateInterpolator()
+        scaleAnimator?.addUpdateListener { anim ->
             val fraction = anim.animatedValue as Float
             val scale = startScale + (targetScale - startScale) * fraction
             val factor = scale / getCurrentScale()
@@ -170,7 +172,7 @@ class PinchZoomImageView @JvmOverloads constructor(
             constrainMatrix()
             imageMatrix = matrix
         }
-        animator.start()
+        scaleAnimator?.start()
     }
 
     companion object {

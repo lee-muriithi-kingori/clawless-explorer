@@ -93,16 +93,15 @@ class CodeViewerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
                 try {
-                    val raf = RandomAccessFile(file, "r")
-                    val fileLen = raf.length()
-                    val truncated = fileLen > MAX_FILE_SIZE
-                    val readLen = if (truncated) MAX_FILE_SIZE else fileLen
-                    val bytes = ByteArray(readLen.toInt())
-                    raf.readFully(bytes)
-                    raf.close()
-
-                    val content = String(bytes, Charsets.UTF_8)
-                    Result.success(content to truncated)
+                    val contentAndTruncated = RandomAccessFile(file, "r").use { raf ->
+                        val fileLen = raf.length()
+                        val truncated = fileLen > MAX_FILE_SIZE
+                        val readLen = if (truncated) MAX_FILE_SIZE else fileLen
+                        val bytes = ByteArray(readLen.toInt())
+                        raf.readFully(bytes)
+                        String(bytes, Charsets.UTF_8) to truncated
+                    }
+                    Result.success(contentAndTruncated)
                 } catch (e: Exception) {
                     Result.failure(e)
                 }

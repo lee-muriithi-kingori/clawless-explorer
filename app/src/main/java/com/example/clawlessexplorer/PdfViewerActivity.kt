@@ -26,6 +26,7 @@ class PdfViewerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityPdfViewerBinding
     private lateinit var pdfiumCore: PdfiumCore
     private var pdfDocument: PdfDocument? = null
+    private var pfd: ParcelFileDescriptor? = null
     private var totalPages = 0
     private var currentPage = 0
 
@@ -83,11 +84,11 @@ class PdfViewerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val doc = withContext(Dispatchers.IO) {
-                    val fd = ParcelFileDescriptor.open(
+                    pfd = ParcelFileDescriptor.open(
                         file,
                         ParcelFileDescriptor.MODE_READ_ONLY
                     )
-                    pdfiumCore.newDocument(fd)
+                    pdfiumCore.newDocument(pfd!!)
                 }
                 pdfDocument = doc
                 totalPages = withContext(Dispatchers.IO) {
@@ -152,6 +153,8 @@ class PdfViewerActivity : AppCompatActivity() {
             }
         }
         pdfDocument = null
+        try { pfd?.close() } catch (_: Exception) {}
+        pfd = null
         super.onDestroy()
     }
 

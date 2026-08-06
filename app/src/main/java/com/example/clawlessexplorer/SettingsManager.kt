@@ -63,6 +63,9 @@ class SettingsManager(context: Context) {
         return try {
             val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
             val exitCode = process.waitFor()
+            try { process.inputStream.close() } catch (_: Exception) {}
+            try { process.errorStream.close() } catch (_: Exception) {}
+            try { process.outputStream.close() } catch (_: Exception) {}
             exitCode == 0
         } catch (e: Exception) {
             false
