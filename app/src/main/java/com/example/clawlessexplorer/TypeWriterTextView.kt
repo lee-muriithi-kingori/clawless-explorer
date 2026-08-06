@@ -2,6 +2,7 @@ package com.example.clawlessexplorer
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
 import kotlinx.coroutines.*
 
@@ -23,6 +24,14 @@ class TypeWriterTextView @JvmOverloads constructor(
         super.onDetachedFromWindow()
         mJob?.cancel()
         scope.cancel()
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (visibility != VISIBLE) {
+            mJob?.cancel()
+            mJob = null
+        }
     }
 
     fun animateText(text: CharSequence) {

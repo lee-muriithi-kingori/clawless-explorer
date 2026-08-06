@@ -93,6 +93,14 @@ class HtmlViewerActivity : AppCompatActivity() {
         if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
+    override fun onDestroy() {
+        webView.stopLoading()
+        webView.settings.javaScriptEnabled = false
+        webView.loadUrl("about:blank")
+        webView.destroy()
+        super.onDestroy()
+    }
+
     private fun guessMime(name: String): String = when (name.substringAfterLast('.', "").lowercase()) {
         "html", "htm" -> "text/html"
         "css" -> "text/css"

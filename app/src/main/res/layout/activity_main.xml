@@ -22,6 +22,24 @@
             app:elevation="0dp"
             app:liftOnScroll="false">
 
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Animated particle constellation background -->
+                <com.example.clawlessexplorer.ParticleFieldView
+                    android:id="@+id/particleField"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0.6" />
+
+                <!-- Animated aurora gradient background -->
+                <com.example.clawlessexplorer.AuroraGradientView
+                    android:id="@+id/auroraGradient"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0.4" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -72,6 +90,18 @@
                             android:textColor="@color/text_on_hero"
                             android:textSize="20sp"
                             android:textStyle="bold" />
+
+                        <ImageButton
+                            android:id="@+id/btnHiddenToggle"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_centerVertical="true"
+                            android:layout_toStartOf="@+id/btnSettings"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Toggle hidden files"
+                            android:src="@drawable/ic_visibility_off"
+                            app:tint="@color/text_on_hero"
+                            android:alpha="0.7" />
 
                         <ImageButton
                             android:id="@+id/btnSettings"
@@ -401,7 +431,16 @@
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                <!-- Morphing wave animation at bottom of hero -->
+                <com.example.clawlessexplorer.MorphingWaveView
+                    android:id="@+id/morphingWave"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_gravity="bottom" />
+
             </LinearLayout>
+            </FrameLayout>
 
             <!-- ===== SEARCH BAR (hidden by default) ===== -->
             <com.google.android.material.textfield.TextInputLayout
@@ -596,41 +635,78 @@
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <!-- ========== EMPTY STATE ========== -->
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/emptyState"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingHorizontal="32dp"
-            android:visibility="gone">
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
-            <ImageView
-                android:layout_width="160dp"
-                android:layout_height="160dp"
-                android:contentDescription="Empty"
-                android:src="@drawable/ic_empty_state" />
-
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="280dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:fontFamily="sans-serif-medium"
-                android:letterSpacing="-0.01"
-                android:text="Nothing here yet"
-                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                android:textColor="?attr/colorOnSurface" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:gravity="center"
-                android:text="This folder is empty.\nDrop files here or create a new one."
-                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:paddingHorizontal="32dp"
+                android:paddingTop="36dp"
+                android:paddingBottom="28dp">
+
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginBottom="8dp">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_badge_circle"
+                        android:backgroundTint="?attr/colorPrimaryContainer"
+                        android:alpha="0.5" />
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Empty"
+                        android:src="@drawable/ic_empty_state"
+                        app:tint="?attr/colorPrimary" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
+                    android:letterSpacing="-0.02"
+                    android:text="Nothing here yet"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:letterSpacing="0.01"
+                    android:text="This folder is empty.\nCreate a new file or folder."
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/emptyStateCreateBtn"
+                    style="@style/Widget.Clawless.Button.Tonal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Create New"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- ========== SELECTION ACTION BAR (bottom) ========== -->
         <com.google.android.material.card.MaterialCardView
@@ -655,17 +731,50 @@
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="6dp">
 
+                <!-- Selection count badge with accent background -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    app:cardBackgroundColor="?attr/colorPrimary"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="0dp">
+
+                    <TextView
+                        android:id="@+id/selectionBarCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:minWidth="28dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="0"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:textSize="13sp" />
+                </com.google.android.material.card.MaterialCardView>
+
                 <TextView
-                    android:id="@+id/selectionBarCount"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:fontFamily="sans-serif-medium"
                     android:letterSpacing="-0.01"
-                    android:text="0 selected"
+                    android:text="selected"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="15sp" />
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/selectionSelectAll"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Select All"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_check"
+                    app:tint="?attr/colorOnSurface" />
 
                 <ImageButton
                     android:id="@+id/selectionShare"

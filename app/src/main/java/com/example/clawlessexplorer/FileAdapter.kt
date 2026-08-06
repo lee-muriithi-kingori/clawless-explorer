@@ -88,6 +88,8 @@ class FileAdapter(
         val ctx = holder.itemView.context
 
         holder.name.text = file.name
+        // Dim hidden files slightly to visually distinguish them
+        holder.name.alpha = if (file.name.startsWith(".")) 0.7f else 1f
         holder.lockBadge.visibility = if (file.name.endsWith(".locked")) View.VISIBLE else View.GONE
 
         val isSelected = selectedFiles.contains(file)
@@ -162,12 +164,17 @@ class FileAdapter(
         // Subtle entry animation on first bind
         if (!holder.itemView.hasBeenAnimated) {
             holder.itemView.alpha = 0f
-            holder.itemView.translationY = 12f
+            holder.itemView.translationY = 16f
+            holder.itemView.scaleX = 0.96f
+            holder.itemView.scaleY = 0.96f
             holder.itemView.animate()
                 .alpha(1f)
                 .translationY(0f)
-                .setDuration(220L)
-                .setStartDelay((position.coerceAtMost(12) * 20L))
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(280L)
+                .setStartDelay((position.coerceAtMost(15) * 25L))
+                .setInterpolator(android.view.animation.OvershootInterpolator(0.8f))
                 .start()
             holder.itemView.hasBeenAnimated = true
         }

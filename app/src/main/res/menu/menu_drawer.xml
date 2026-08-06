@@ -42,6 +42,48 @@
                 android:id="@+id/nav_dcim"
                 android:icon="@drawable/ic_nav_dcim"
                 android:title="DCIM" />
+            <item
+                android:id="@+id/nav_documents"
+                android:icon="@drawable/ic_file_document"
+                android:title="Documents" />
+            <item
+                android:id="@+id/nav_music"
+                android:icon="@drawable/ic_file_audio"
+                android:title="Music" />
+            <item
+                android:id="@+id/nav_pictures"
+                android:icon="@drawable/ic_file_image"
+                android:title="Pictures" />
+            <item
+                android:id="@+id/nav_movies"
+                android:icon="@drawable/ic_file_video"
+                android:title="Movies" />
+        </menu>
+    </item>
+    <divider />
+    <item android:title="Storage">
+        <menu>
+            <item
+                android:id="@+id/nav_storage_analyzer"
+                android:icon="@drawable/ic_tool_storage"
+                android:title="Storage Analyzer" />
+        </menu>
+    </item>
+    <divider />
+    <item android:title="Tools">
+        <menu>
+            <item
+                android:id="@+id/nav_batch_rename"
+                android:icon="@drawable/ic_tool_rename"
+                android:title="Batch Rename" />
+            <item
+                android:id="@+id/nav_hash"
+                android:icon="@drawable/ic_tool_hash"
+                android:title="Hash Calculator" />
+            <item
+                android:id="@+id/nav_json"
+                android:icon="@drawable/ic_tool_json"
+                android:title="JSON Formatter" />
         </menu>
     </item>
 </menu>

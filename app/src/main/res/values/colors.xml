@@ -6,6 +6,18 @@
     <color name="brand_pink">#FF6B9D</color>
     <color name="brand_teal">#00C8B4</color>
     <color name="brand_violet">#8B5CF6</color>
+    <color name="brand_cyan">#06B6D4</color>
+    <color name="brand_amber">#F59E0B</color>
+
+    <!-- ============ NEON ACCENTS (for canvas art) ============ -->
+    <color name="neon_purple">#A855F7</color>
+    <color name="neon_blue">#3B82F6</color>
+    <color name="neon_pink">#EC4899</color>
+    <color name="neon_green">#10B981</color>
+    <color name="neon_cyan">#22D3EE</color>
+    <color name="glow_primary">#405B5BF6</color>
+    <color name="glow_secondary">#40FF6B9D</color>
+    <color name="glow_tertiary">#4000C8B4</color>
 
     <!-- ============ M3 LIGHT TOKENS ============ -->
     <color name="md_primary">#5B5BF6</color>

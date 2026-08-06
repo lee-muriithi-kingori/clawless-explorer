@@ -15,7 +15,14 @@ import android.text.TextWatcher
 import android.text.format.Formatter
 import android.view.View
 import android.view.ViewGroup
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
@@ -55,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     private var showHiddenFiles: Boolean = true
     private var fileServer: FileServer? = null
     private var sortType: SortType = SortType.NAME
+    private var isRootMode: Boolean = false
 
     enum class SortType { NAME, DATE, SIZE }
 
@@ -76,11 +84,13 @@ class MainActivity : AppCompatActivity() {
             SettingsManager.SortPref.SIZE -> SortType.SIZE
         }
         showHiddenFiles = settings.showHiddenByDefault
+        isRootMode = settings.rootMode
 
         setupEdgeToEdge()
         setupToolbar()
         setupStorageCard()
         setupHeaderButtons()
+        setupHiddenFilesToggle()
         setupDrawer()
         setupRecyclerView()
         setupListeners()
@@ -90,12 +100,21 @@ class MainActivity : AppCompatActivity() {
         setupSelectionBar()
         setupBackPress()
         setupFabScrollBehavior()
+        setupAnimatedBackground()
         updateStorageInfo()
         checkPermissionsAndLoadFiles()
         if (settings.serverEnabled) startFileServer()
 
         binding.tvTypewriter.setCharacterDelay(100)
         binding.tvTypewriter.animateText("Clawless Explorer")
+
+        // Show root/non-root dialog on first launch
+        if (!settings.hasShownRootDialog) {
+            showRootModeDialog()
+        }
+
+        // Update root badge in nav header
+        updateRootBadge()
 
         handleIntentExtras(intent)
     }
@@ -155,6 +174,96 @@ class MainActivity : AppCompatActivity() {
         binding.btnSettings.setOnClickListener {
             showSettingsSheet()
         }
+    }
+
+    /** Toggle button for showing/hiding hidden (dot) files. */
+    private fun setupHiddenFilesToggle() {
+        updateHiddenToggleIcon()
+        binding.btnHiddenToggle.setOnClickListener {
+            showHiddenFiles = !showHiddenFiles
+            settings.showHiddenByDefault = showHiddenFiles
+            updateHiddenToggleIcon()
+            loadFiles(currentPath)
+            // Animate the toggle
+            it.animate()
+                .scaleX(1.2f).scaleY(1.2f)
+                .setDuration(100L)
+                .withEndAction {
+                    it.animate().scaleX(1f).scaleY(1f).setDuration(100L).start()
+                }
+                .start()
+        }
+    }
+
+    private fun updateHiddenToggleIcon() {
+        binding.btnHiddenToggle.setImageResource(
+            if (showHiddenFiles) R.drawable.ic_visibility else R.drawable.ic_visibility_off
+        )
+        binding.btnHiddenToggle.alpha = if (showHiddenFiles) 1f else 0.5f
+    }
+
+    /** Configure the animated particle/wave/aurora background. */
+    private fun setupAnimatedBackground() {
+        if (!settings.animationsEnabled) {
+            binding.particleField.visibility = View.GONE
+            binding.morphingWave.visibility = View.GONE
+            binding.auroraGradient.visibility = View.GONE
+        }
+    }
+
+    /** Show the first-launch root mode selection dialog. */
+    private fun showRootModeDialog() {
+        settings.hasShownRootDialog = true
+        val rootAvailable = settings.isRootAvailable()
+
+        val message = if (rootAvailable) {
+            "This device has root (superuser) access available.\n\n" +
+            "• Root mode: Access all files and directories, including system partitions\n" +
+            "• Non-root mode: Access only files in standard storage locations\n\n" +
+            "You can change this later in Settings."
+        } else {
+            "Root (superuser) access is not available on this device.\n\n" +
+            "The app will run in standard (non-root) mode. You can only access files in standard storage locations.\n\n" +
+            "If you root your device later, you can enable root mode in Settings."
+        }
+
+        if (rootAvailable) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Choose Access Mode")
+                .setMessage(message)
+                .setPositiveButton("Root Mode") { _, _ ->
+                    settings.rootMode = true
+                    isRootMode = true
+                    updateRootBadge()
+                    loadFiles(currentPath)
+                    Toast.makeText(this, "Root mode enabled — full filesystem access", Toast.LENGTH_LONG).show()
+                }
+                .setNegativeButton("Non-Root") { _, _ ->
+                    settings.rootMode = false
+                    isRootMode = false
+                    updateRootBadge()
+                    Toast.makeText(this, "Running in standard mode", Toast.LENGTH_SHORT).show()
+                }
+                .setCancelable(false)
+                .show()
+        } else {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Access Mode")
+                .setMessage(message)
+                .setPositiveButton("Continue") { _, _ ->
+                    settings.rootMode = false
+                    isRootMode = false
+                }
+                .setCancelable(false)
+                .show()
+        }
+    }
+
+    /** Show or hide the ROOT badge in the nav drawer header. */
+    private fun updateRootBadge() {
+        val headerView = binding.navigationView.getHeaderView(0)
+        val rootBadge = headerView.findViewById<LinearLayout>(R.id.rootBadge)
+        rootBadge?.visibility = if (isRootMode) View.VISIBLE else View.GONE
     }
 
     private fun setupStorageCard() {
@@ -236,6 +345,16 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.nav_downloads -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS))
                 R.id.nav_dcim -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM))
+                // New Quick Access folders
+                R.id.nav_documents -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS))
+                R.id.nav_music -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC))
+                R.id.nav_pictures -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES))
+                R.id.nav_movies -> navigateTo(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES))
+                // Storage & Tools shortcuts
+                R.id.nav_storage_analyzer -> startActivity(Intent(this, StorageAnalyzerActivity::class.java))
+                R.id.nav_batch_rename -> startActivity(Intent(this, BatchRenameActivity::class.java))
+                R.id.nav_hash -> startActivity(Intent(this, HashActivity::class.java))
+                R.id.nav_json -> startActivity(Intent(this, JsonFormatterActivity::class.java))
             }
             binding.drawerLayout.closeDrawers()
             true
@@ -336,7 +455,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateSelectionTitle(count: Int) {
         binding.tvTypewriter.animateText("$count selected")
-        binding.selectionBarCount.text = if (count == 1) "1 item selected" else "$count items selected"
+        // Just the number for the badge
+        binding.selectionBarCount.text = count.toString()
+        // Animate badge scale
+        binding.selectionBarCount.animate()
+            .scaleX(1.2f).scaleY(1.2f)
+            .setDuration(80L)
+            .withEndAction {
+                binding.selectionBarCount.animate().scaleX(1f).scaleY(1f).setDuration(80L).start()
+            }
+            .start()
     }
 
     private fun resetToolbar() {
@@ -495,18 +623,21 @@ class MainActivity : AppCompatActivity() {
         binding.selectionDelete.setOnClickListener { deleteSelectedFiles() }
         binding.selectionShare.setOnClickListener { shareSelectedFiles() }
         binding.selectionCopy.setOnClickListener { copySelectedToClipboard() }
+        binding.selectionSelectAll.setOnClickListener {
+            adapter.selectAll()
+        }
         binding.selectionMore.setOnClickListener {
             val selected = adapter.getSelectedFiles()
             if (selected.size == 1) {
-                showFileActions(selected.first())
+                showFileProperties(selected.first())
             } else {
                 MaterialAlertDialogBuilder(this)
-                    .setTitle("${selected.size} items")
-                    .setItems(arrayOf("Move", "Rename", "Properties")) { _, which ->
+                    .setTitle("${selected.size} items selected")
+                    .setItems(arrayOf("Move Selected", "Compress Selected", "Properties")) { _, which ->
                         when (which) {
-                            0 -> Toast.makeText(this, "Move — coming soon", Toast.LENGTH_SHORT).show()
-                            1 -> Toast.makeText(this, "Rename — coming soon", Toast.LENGTH_SHORT).show()
-                            2 -> Toast.makeText(this, "Properties — coming soon", Toast.LENGTH_SHORT).show()
+                            0 -> showCopyMoveDialog(selected.first(), isMove = true)
+                            1 -> startActivity(ZipToolsActivity.intent(this, "compress", selected.first().absolutePath))
+                            2 -> showFileProperties(selected.first())
                         }
                     }
                     .show()
@@ -609,6 +740,33 @@ class MainActivity : AppCompatActivity() {
         switchHidden.setOnCheckedChangeListener { _, isChecked ->
             settings.showHiddenByDefault = isChecked
             showHiddenFiles = isChecked
+            updateHiddenToggleIcon()
+            loadFiles(currentPath)
+        }
+
+        // Animations switch
+        val switchAnimations = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchAnimations)
+        switchAnimations.isChecked = settings.animationsEnabled
+        switchAnimations.setOnCheckedChangeListener { _, isChecked ->
+            settings.animationsEnabled = isChecked
+            binding.particleField.visibility = if (isChecked) View.VISIBLE else View.GONE
+            binding.morphingWave.visibility = if (isChecked) View.VISIBLE else View.GONE
+            binding.auroraGradient.visibility = if (isChecked) View.VISIBLE else View.GONE
+        }
+
+        // Root mode switch
+        val switchRoot = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchRoot)
+        switchRoot.isChecked = settings.rootMode
+        switchRoot.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && !settings.isRootAvailable()) {
+                // Root not available — revert
+                switchRoot.isChecked = false
+                Toast.makeText(this, "Root (su) not available on this device", Toast.LENGTH_SHORT).show()
+                return@setOnCheckedChangeListener
+            }
+            settings.rootMode = isChecked
+            isRootMode = isChecked
+            updateRootBadge()
             loadFiles(currentPath)
         }
 
@@ -637,16 +795,104 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCreateOptions() {
-        val options = arrayOf("New Folder", "New File")
+        // Speed-dial style options with more actions
+        val options = arrayOf(
+            "📁  New Folder",
+            "📄  New File",
+            "📝  New Text Note",
+            "🔍  Search in Files",
+            "📊  Analyze Storage"
+        )
         MaterialAlertDialogBuilder(this)
-            .setTitle("Create New")
+            .setTitle("Quick Actions")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> createNewFolder()
                     1 -> createNewFile()
+                    2 -> createNewTextNote()
+                    3 -> showSearchInFilesDialog()
+                    4 -> startActivity(Intent(this, StorageAnalyzerActivity::class.java))
                 }
             }
             .show()
+    }
+
+    /** Create a quick text note with timestamp. */
+    private fun createNewTextNote() {
+        val timestamp = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+        val fileName = "Note $timestamp.txt"
+        val newFile = File(currentPath, fileName)
+        try {
+            newFile.writeText("# Note — $timestamp\n\n")
+            loadFiles(currentPath)
+            val snack = com.google.android.material.snackbar.Snackbar.make(
+                binding.root, "Created $fileName", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+            )
+            snack.anchorView = binding.fabAdd
+            snack.setAction("Open") { openFile(newFile) }
+            snack.show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to create note", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** Search for text content within files (grep-like). */
+    private fun showSearchInFilesDialog() {
+        val input = TextInputEditText(this)
+        input.hint = "Search text in files..."
+        val container = android.widget.FrameLayout(this)
+        val params = android.widget.FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(48, 16, 48, 16)
+        input.layoutParams = params
+        container.addView(input)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Search in Files")
+            .setView(container)
+            .setPositiveButton("Search") { _, _ ->
+                val query = input.text.toString()
+                if (query.isNotEmpty()) {
+                    searchInFiles(query)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    /** Grep-like search: find files containing the query text. */
+    private fun searchInFiles(query: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val results = mutableListOf<File>()
+            val maxFileSize = 512 * 1024L // Skip files larger than 512KB
+            currentPath.walkTopDown().take(500).forEach { file ->
+                if (!file.isDirectory && file.length() <= maxFileSize && file.canRead()) {
+                    try {
+                        if (file.readText().contains(query, ignoreCase = true)) {
+                            results.add(file)
+                        }
+                    } catch (_: Exception) { }
+                }
+            }
+            withContext(Dispatchers.Main) {
+                if (results.isEmpty()) {
+                    com.google.android.material.snackbar.Snackbar.make(
+                        binding.root, "No files containing \"$query\"", com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                    ).apply { anchorView = binding.fabAdd }.show()
+                } else {
+                    // Show results as filter in adapter
+                    adapter.updateFiles(results)
+                    binding.emptyState.visibility = View.GONE
+                    com.google.android.material.snackbar.Snackbar.make(
+                        binding.root, "Found in ${results.size} file(s)", com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+                    ).apply {
+                        anchorView = binding.fabAdd
+                        setAction("Clear") { loadFiles(currentPath) }
+                    }.show()
+                }
+            }
+        }
     }
 
     private fun createNewFolder() {
@@ -739,6 +985,158 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Show detailed file properties with checksum. */
+    private fun showFileProperties(file: File) {
+        val name = file.name
+        val path = file.absolutePath
+        val size = if (file.isDirectory) {
+            val count = try { file.list()?.size ?: 0 } catch (_: Exception) { 0 }
+            "$count items"
+        } else {
+            Formatter.formatFileSize(this, file.length())
+        }
+        val modified = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+            .format(java.util.Date(file.lastModified()))
+        val permissions = (if (file.canRead()) "r" else "-") +
+                (if (file.canWrite()) "w" else "-") +
+                (if (file.canExecute()) "x" else "-")
+        val isHidden = file.name.startsWith(".")
+        val type = if (file.isDirectory) "Directory" else {
+            val ext = file.extension.uppercase().ifEmpty { "File" }
+            "$ext File"
+        }
+
+        // Build the info text
+        val info = buildString {
+            appendLine("📄 Name: $name")
+            appendLine("📂 Path: $path")
+            appendLine("📊 Size: $size")
+            appendLine("🕐 Modified: $modified")
+            appendLine("🔒 Permissions: $permissions")
+            appendLine("📁 Type: $type")
+            appendLine("👁️ Hidden: ${if (isHidden) "Yes" else "No"}")
+            if (!file.isDirectory) {
+                appendLine()
+                appendLine("⏳ Computing checksums...")
+            }
+        }
+
+        val tv = TextView(this).apply {
+            text = info
+            textSize = 13f
+            setPadding(48, 24, 48, 24)
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle("Properties")
+            .setView(tv)
+            .setPositiveButton("OK", null)
+            .setNeutralButton("Copy Path") { _, _ ->
+                val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                clipboard.setPrimaryClip(android.content.ClipData.newPlainText("path", file.absolutePath))
+                Toast.makeText(this@MainActivity, "Path copied", Toast.LENGTH_SHORT).show()
+            }
+            .create()
+
+        dialog.show()
+
+        // Compute checksums asynchronously
+        if (!file.isDirectory) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val md5 = computeHash(file, "MD5")
+                val sha256 = computeHash(file, "SHA-256")
+                withContext(Dispatchers.Main) {
+                    val updated = buildString {
+                        appendLine("📄 Name: $name")
+                        appendLine("📂 Path: $path")
+                        appendLine("📊 Size: $size")
+                        appendLine("🕐 Modified: $modified")
+                        appendLine("🔒 Permissions: $permissions")
+                        appendLine("📁 Type: $type")
+                        appendLine("👁️ Hidden: ${if (isHidden) "Yes" else "No"}")
+                        appendLine()
+                        appendLine("🔑 MD5: $md5")
+                        appendLine("🔑 SHA-256: $sha256")
+                    }
+                    tv.text = updated
+                }
+            }
+        }
+    }
+
+    /** Compute a hash for a file. */
+    private fun computeHash(file: File, algorithm: String): String {
+        return try {
+            val digest = java.security.MessageDigest.getInstance(algorithm)
+            file.inputStream().buffered().use { stream ->
+                val buffer = ByteArray(8192)
+                var read: Int
+                while (stream.read(buffer).also { read = it } != -1) {
+                    digest.update(buffer, 0, read)
+                }
+            }
+            digest.digest().joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) {
+            "Error: ${e.message}"
+        }
+    }
+
+    /** Delete with trash/undo support. */
+    private fun deleteWithUndo(file: File) {
+        val trashDir = File(cacheDir, ".trash")
+        trashDir.mkdirs()
+
+        // Move to trash instead of permanent delete
+        val trashFile = File(trashDir, file.name + "_" + System.currentTimeMillis())
+        val movedToTrash = file.renameTo(trashFile)
+
+        if (movedToTrash) {
+            loadFiles(currentPath)
+            updateStorageInfo()
+            val snack = com.google.android.material.snackbar.Snackbar.make(
+                binding.root,
+                "Moved ${file.name} to trash",
+                com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+            )
+            snack.anchorView = binding.fabAdd
+            snack.setAction("Undo") {
+                // Restore from trash
+                if (trashFile.exists()) {
+                    trashFile.renameTo(file)
+                    loadFiles(currentPath)
+                    updateStorageInfo()
+                }
+            }
+            snack.addCallback(object : com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback<com.google.android.material.snackbar.Snackbar>() {
+                override fun onDismissed(transientBottomBar: com.google.android.material.snackbar.Snackbar, event: Int) {
+                    if (event != DISMISS_EVENT_ACTION) {
+                        // Snackbar dismissed without undo — permanently delete
+                        trashFile.deleteRecursively()
+                    }
+                }
+            })
+            snack.show()
+        } else {
+            // Fallback: direct delete with confirmation
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Delete File?")
+                .setMessage("Cannot move to trash. Permanently delete ${file.name}?")
+                .setPositiveButton("Delete") { _, _ ->
+                    if (file.deleteRecursively()) {
+                        loadFiles(currentPath)
+                        updateStorageInfo()
+                        com.google.android.material.snackbar.Snackbar.make(
+                            binding.root, "Deleted ${file.name}", com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
+                        ).apply { anchorView = binding.fabAdd }.show()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+    }
+
     private fun showFileActions(file: File) {
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_file_actions, null)
@@ -794,24 +1192,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         view.findViewById<View>(R.id.btnDelete).setOnClickListener {
-            MaterialAlertDialogBuilder(this)
-                .setTitle("Delete File?")
-                .setMessage("Are you sure you want to delete ${file.name}?")
-                .setPositiveButton("Delete") { _, _ ->
-                    if (file.deleteRecursively()) {
-                        val snack = com.google.android.material.snackbar.Snackbar.make(
-                            binding.root,
-                            "Deleted ${file.name}",
-                            com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
-                        )
-                        snack.anchorView = binding.fabAdd
-                        snack.show()
-                        loadFiles(currentPath)
-                        updateStorageInfo()
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
+            deleteWithUndo(file)
             dialog.dismiss()
         }
 
@@ -1050,9 +1431,9 @@ class MainActivity : AppCompatActivity() {
             btnCreateShortcut.visibility = View.GONE
         }
 
-        // File Info — always visible
+        // File Info / Properties — always visible
         view.findViewById<View>(R.id.btnFileInfo).setOnClickListener {
-            showFileInfoDialog(file)
+            showFileProperties(file)
             dialog.dismiss()
         }
 
@@ -1588,10 +1969,33 @@ class MainActivity : AppCompatActivity() {
             unlockFolder(directory)
             return
         }
-        currentPath = directory
-        loadFiles(directory)
-        updateBreadcrumbs(directory)
-        settings.addRecent(directory.absolutePath)
+        // Animate out current list before navigating
+        if (settings.animationsEnabled) {
+            binding.recyclerView.animate()
+                .alpha(0f)
+                .translationX(-24f)
+                .setDuration(120L)
+                .withEndAction {
+                    currentPath = directory
+                    loadFiles(directory)
+                    updateBreadcrumbs(directory)
+                    settings.addRecent(directory.absolutePath)
+                    binding.recyclerView.alpha = 0f
+                    binding.recyclerView.translationX = 24f
+                    binding.recyclerView.animate()
+                        .alpha(1f)
+                        .translationX(0f)
+                        .setDuration(180L)
+                        .setInterpolator(AccelerateDecelerateInterpolator())
+                        .start()
+                }
+                .start()
+        } else {
+            currentPath = directory
+            loadFiles(directory)
+            updateBreadcrumbs(directory)
+            settings.addRecent(directory.absolutePath)
+        }
     }
 
     private fun updateBreadcrumbs(directory: File) {
@@ -1756,7 +2160,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             var files = directory.listFiles()?.toList() ?: emptyList()
 
-            if (files.isEmpty() && directory.absolutePath != Environment.getExternalStorageDirectory().absolutePath) {
+            // If root mode is enabled and normal listing fails, try root listing
+            if (files.isEmpty() && (isRootMode || directory.absolutePath != Environment.getExternalStorageDirectory().absolutePath)) {
                 files = listFilesAsRoot(directory)
             }
 
@@ -1775,8 +2180,22 @@ class MainActivity : AppCompatActivity() {
             }
 
             withContext(Dispatchers.Main) {
+                // Animate the list transition
+                if (settings.animationsEnabled) {
+                    TransitionManager.beginDelayedTransition(binding.recyclerView, Fade().apply {
+                        duration = 200L
+                    })
+                }
                 adapter.updateFiles(finalFiles)
                 binding.emptyState.visibility = if (finalFiles.isEmpty()) View.VISIBLE else View.GONE
+                // Wire up empty state create button
+                if (finalFiles.isEmpty()) {
+                    try {
+                        binding.emptyState.findViewById<com.google.android.material.button.MaterialButton>(R.id.emptyStateCreateBtn)?.setOnClickListener {
+                            showCreateOptions()
+                        }
+                    } catch (_: Exception) { }
+                }
             }
         }
     }

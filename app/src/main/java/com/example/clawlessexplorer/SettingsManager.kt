@@ -39,12 +39,42 @@ class SettingsManager(context: Context) {
         set(value) = prefs.edit().putBoolean(KEY_HIDDEN, value).apply()
 
     var serverEnabled: Boolean
-        get() = prefs.getBoolean(KEY_SERVER, true)
+        get() = prefs.getBoolean(KEY_SERVER, false)  // Default OFF for security
         set(value) = prefs.edit().putBoolean(KEY_SERVER, value).apply()
 
     var storageCardCollapsed: Boolean
         get() = prefs.getBoolean(KEY_STORAGE_COLLAPSED, false)
         set(value) = prefs.edit().putBoolean(KEY_STORAGE_COLLAPSED, value).apply()
+
+    // ============ Root Mode ============
+
+    /** Whether the user has chosen root (superuser) mode. */
+    var rootMode: Boolean
+        get() = prefs.getBoolean(KEY_ROOT_MODE, false)
+        set(value) = prefs.edit().putBoolean(KEY_ROOT_MODE, value).apply()
+
+    /** Whether the first-launch root dialog has been shown. */
+    var hasShownRootDialog: Boolean
+        get() = prefs.getBoolean(KEY_ROOT_DIALOG_SHOWN, false)
+        set(value) = prefs.edit().putBoolean(KEY_ROOT_DIALOG_SHOWN, value).apply()
+
+    /** Whether root (su) is available on this device. */
+    fun isRootAvailable(): Boolean {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            val exitCode = process.waitFor()
+            exitCode == 0
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // ============ Animations ============
+
+    /** Whether particle/wave animations are enabled. */
+    var animationsEnabled: Boolean
+        get() = prefs.getBoolean(KEY_ANIMATIONS, true)
+        set(value) = prefs.edit().putBoolean(KEY_ANIMATIONS, value).apply()
 
     // ============ Recents ============
 
@@ -115,6 +145,9 @@ class SettingsManager(context: Context) {
         private const val KEY_SERVER = "server_enabled"
         private const val KEY_RECENTS = "recents_json"
         private const val KEY_STORAGE_COLLAPSED = "storage_card_collapsed"
+        private const val KEY_ROOT_MODE = "root_mode"
+        private const val KEY_ROOT_DIALOG_SHOWN = "root_dialog_shown"
+        private const val KEY_ANIMATIONS = "animations_enabled"
         const val MAX_RECENTS = 20
     }
 }
