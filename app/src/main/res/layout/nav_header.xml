@@ -81,7 +81,7 @@
                 android:layout_marginStart="8dp"
                 android:fontFamily="sans-serif-medium"
                 android:letterSpacing="0.04"
-                android:text="v1.0.0"
+                android:text="v2.0.0"
                 android:textColor="@color/text_on_hero"
                 android:textSize="11sp" />
         </LinearLayout>

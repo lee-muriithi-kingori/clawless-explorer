@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.clawlessexplorer"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -24,6 +24,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Debug-signed so the APK is installable without a release keystore.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -56,6 +58,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.coil)
+    implementation(libs.coil.video)
     implementation(libs.gson)
     implementation(libs.pdfium)
     implementation(libs.ktor.server.core)

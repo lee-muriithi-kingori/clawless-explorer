@@ -109,8 +109,9 @@
                             android:layout_height="40dp"
                             android:layout_centerVertical="true"
                             android:layout_toStartOf="@+id/btnSettings"
-                            android:src="@android:drawable/ic_menu_view"
                             android:contentDescription="Toggle grid/list view"
+                            android:src="@drawable/ic_grid_view"
+                            app:tint="@color/text_on_hero"
                             android:background="?attr/selectableItemBackgroundBorderless" />
 
                         <ImageButton
@@ -165,7 +166,7 @@
                             android:layout_width="6dp"
                             android:layout_height="6dp"
                             android:background="@drawable/bg_badge_circle"
-                                    android:backgroundTint="@color/brand_teal" />
+                            android:backgroundTint="@color/brand_teal" />
 
                         <TextView
                             android:id="@+id/storagePillLabel"
@@ -370,7 +371,7 @@
                                     android:layout_width="8dp"
                                     android:layout_height="8dp"
                                     android:background="@drawable/bg_badge_circle"
-                    android:backgroundTint="@color/brand_teal" />
+                                    android:backgroundTint="@color/brand_teal" />
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
@@ -821,7 +822,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Move"
                     android:padding="10dp"
-                    android:src="@android:drawable/ic_menu_crop"
+                    android:src="@drawable/ic_swap_move"
                     app:tint="?attr/colorOnSurface" />
 
                 <ImageButton

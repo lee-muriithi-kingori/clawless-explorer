@@ -53,7 +53,7 @@
                     android:id="@+id/btnClear"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:layout_toStartOf="@+id/btnRootToggle"
+                    android:layout_toStartOf="@+id/btnRoot"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"

@@ -86,12 +86,14 @@ class MainActivity : AppCompatActivity() {
         }
         showHiddenFiles = settings.showHiddenByDefault
         isRootMode = settings.rootMode
+        isGridView = settings.gridMode
 
         // Restore state after rotation
         savedInstanceState?.let {
             currentPath = File(it.getString("current_path") ?: currentPath.absolutePath)
             showHiddenFiles = it.getBoolean("show_hidden", showHiddenFiles)
             isRootMode = it.getBoolean("root_mode", isRootMode)
+            isGridView = it.getBoolean("grid_mode", isGridView)
             sortType = try { SortType.valueOf(it.getString("sort_type") ?: "NAME") } catch (_: Exception) { SortType.NAME }
         }
 
@@ -103,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         setupRecyclerView()
         setupListeners()
+        applyViewMode()
         setupSearch()
         setupFilterChips()
         setupSwipeRefresh()
@@ -159,6 +162,7 @@ class MainActivity : AppCompatActivity() {
         outState.putString("current_path", currentPath.absolutePath)
         outState.putBoolean("show_hidden", showHiddenFiles)
         outState.putBoolean("root_mode", isRootMode)
+        outState.putBoolean("grid_mode", isGridView)
         outState.putString("sort_type", sortType.name)
     }
 
@@ -546,14 +550,33 @@ class MainActivity : AppCompatActivity() {
         // Grid/List view toggle
         binding.btnViewToggle.setOnClickListener {
             isGridView = !isGridView
-            binding.recyclerView.layoutManager = if (isGridView) {
-                androidx.recyclerview.widget.GridLayoutManager(this, 3)
-            } else {
-                androidx.recyclerview.widget.LinearLayoutManager(this)
-            }
-            binding.recyclerView.adapter = adapter
-            loadFiles(currentPath)
+            settings.gridMode = isGridView
+            applyViewMode()
         }
+    }
+
+    /** Applies the current list/grid mode: layout manager, adapter view type, toolbar icon. */
+    private fun applyViewMode() {
+        val spanCount = computeSpanCount()
+        binding.recyclerView.layoutManager = if (isGridView) {
+            androidx.recyclerview.widget.GridLayoutManager(this, spanCount)
+        } else {
+            androidx.recyclerview.widget.LinearLayoutManager(this)
+        }
+        adapter.setGridMode(isGridView)
+        binding.btnViewToggle.setImageResource(
+            if (isGridView) R.drawable.ic_list_view else R.drawable.ic_grid_view
+        )
+        binding.btnViewToggle.imageTintList = android.content.res.ColorStateList.valueOf(
+            androidx.core.content.ContextCompat.getColor(this, R.color.text_on_hero)
+        )
+    }
+
+    /** 3 columns on phones in portrait, more on tablets / landscape. */
+    private fun computeSpanCount(): Int {
+        val displayMetrics = resources.displayMetrics
+        val screenWidthDp = displayMetrics.widthPixels / displayMetrics.density
+        return (screenWidthDp / 120).toInt().coerceIn(3, 6)
     }
 
     private fun toggleSearch() {

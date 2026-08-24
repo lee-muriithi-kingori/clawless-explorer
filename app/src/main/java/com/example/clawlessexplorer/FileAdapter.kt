@@ -31,8 +31,20 @@ class FileAdapter(
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     private var searchQuery: String = ""
     private var typeFilter: TypeFilter = TypeFilter.ALL
+    private var gridMode: Boolean = false
     var isSelectionMode = false
         private set
+
+    companion object {
+        const val TYPE_LIST = 0
+        const val TYPE_GRID = 1
+    }
+
+    fun setGridMode(grid: Boolean) {
+        if (gridMode == grid) return
+        gridMode = grid
+        notifyDataSetChanged()
+    }
 
     enum class TypeFilter {
         ALL, IMAGE, VIDEO, AUDIO, DOCUMENT, ARCHIVE, APK;
@@ -62,13 +74,14 @@ class FileAdapter(
 
     class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val card: MaterialCardView = view as MaterialCardView
-        val badgeBackground: View = view.findViewById(R.id.badgeBackground)
-        val icon: ImageView = view.findViewById(R.id.fileIcon)
+        val badgeBackground: View? = view.findViewById(R.id.badgeBackground)
+        val icon: ImageView? = view.findViewById(R.id.fileIcon)
         val thumbnail: ImageView = view.findViewById(R.id.fileThumbnail)
         val name: TextView = view.findViewById(R.id.fileName)
         val meta: TextView = view.findViewById(R.id.fileMeta)
         val lockBadge: ImageView = view.findViewById(R.id.lockBadge)
-        val moreIcon: ImageView = view.findViewById(R.id.moreIcon)
+        val moreIcon: ImageView? = view.findViewById(R.id.moreIcon)
+        val extChip: TextView? = view.findViewById(R.id.gridExtChip)
 
         init {
             // app:checkable isn't a valid attribute on this Material lib version,
@@ -77,9 +90,13 @@ class FileAdapter(
         }
     }
 
+    override fun getItemViewType(position: Int): Int =
+        if (gridMode) TYPE_GRID else TYPE_LIST
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
+        val layout = if (viewType == TYPE_GRID) R.layout.item_file_grid else R.layout.item_file
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_file, parent, false)
+            .inflate(layout, parent, false)
         return FileViewHolder(view)
     }
 
@@ -97,13 +114,14 @@ class FileAdapter(
 
         // Determine file type → style
         val style = styleFor(file, ctx)
-        val isImage = !file.isDirectory &&
-            file.extension.lowercase() in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp")
+        val ext = file.extension.lowercase()
+        val isImage = !file.isDirectory && ext in listOf("jpg", "jpeg", "png", "webp", "gif", "bmp")
+        val isVideo = !file.isDirectory && ext in listOf("mp4", "mkv", "avi", "mov", "webm")
 
-        if (isImage) {
-            // Show the actual image as a 48dp thumbnail
-            holder.badgeBackground.visibility = View.GONE
-            holder.icon.visibility = View.GONE
+        if (isImage || (isVideo && gridMode)) {
+            // Real media thumbnail (images everywhere, video frames in grid mode)
+            holder.badgeBackground?.visibility = View.GONE
+            holder.icon?.visibility = View.GONE
             holder.thumbnail.visibility = View.VISIBLE
             holder.thumbnail.load(file) {
                 crossfade(true)
@@ -111,14 +129,24 @@ class FileAdapter(
                 error(R.drawable.ic_file_image)
             }
         } else {
-            holder.badgeBackground.visibility = View.VISIBLE
-            holder.icon.visibility = View.VISIBLE
+            holder.badgeBackground?.visibility = View.VISIBLE
+            holder.icon?.visibility = View.VISIBLE
             holder.thumbnail.visibility = View.GONE
-            holder.badgeBackground.setBackgroundResource(style.badgeRes)
-            holder.icon.setImageResource(style.iconRes)
-            holder.icon.imageTintList = ColorStateList.valueOf(
+            holder.badgeBackground?.setBackgroundResource(style.badgeRes)
+            holder.icon?.setImageResource(style.iconRes)
+            holder.icon?.imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(ctx, style.accentRes)
             )
+        }
+
+        // Extension chip on grid tiles
+        holder.extChip?.apply {
+            if (!file.isDirectory) {
+                visibility = View.VISIBLE
+                text = ext.uppercase().ifEmpty { "FILE" }
+            } else {
+                visibility = View.GONE
+            }
         }
 
         // Meta line
@@ -152,7 +180,7 @@ class FileAdapter(
             true
         }
 
-        holder.moreIcon.setOnClickListener {
+        holder.moreIcon?.setOnClickListener {
             it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             if (isSelectionMode) {
                 toggleSelection(file)
