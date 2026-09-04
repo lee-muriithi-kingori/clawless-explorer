@@ -100,6 +100,24 @@ class ApkViewerActivity : AppCompatActivity() {
 
                     val permissions = archiveInfo?.requestedPermissions?.toList() ?: emptyList()
 
+                    // Apktool-style structure peek: dex files plus entry count,
+                    // read straight from the zip without decoding anything.
+                    val dexEntries: List<Pair<String, Long>>
+                    val totalEntries: Int
+                    try {
+                        java.util.zip.ZipFile(file).use { zip ->
+                            val entries = java.util.Collections.list(zip.entries())
+                            totalEntries = entries.size
+                            dexEntries = entries
+                                .filter { it.name.endsWith(".dex") }
+                                .sortedBy { it.name }
+                                .map { it.name to it.size }
+                        }
+                    } catch (_: Exception) {
+                        dexEntries = emptyList()
+                        totalEntries = -1
+                    }
+
                     val signerInfo = try {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                             val signingInfo = archiveInfo?.signingInfo
@@ -125,6 +143,8 @@ class ApkViewerActivity : AppCompatActivity() {
                         fileSize = file.length(),
                         lastModified = Date(file.lastModified()),
                         permissions = permissions,
+                        dexEntries = dexEntries,
+                        totalEntries = totalEntries,
                         signerInfo = signerInfo
                     )
                 } catch (e: Exception) {
@@ -165,6 +185,21 @@ class ApkViewerActivity : AppCompatActivity() {
             binding.permissionsCard.visibility = View.GONE
         }
 
+        if (data.totalEntries >= 0) {
+            binding.contentsCard.visibility = View.VISIBLE
+            val header = "${data.totalEntries} entries"
+            val dexLines = if (data.dexEntries.isEmpty()) {
+                "No dex files found"
+            } else {
+                data.dexEntries.joinToString("\n") { (name, size) ->
+                    "$name (${Formatter.formatShortFileSize(this, size)})"
+                }
+            }
+            binding.contentsList.text = "$header\n$dexLines"
+        } else {
+            binding.contentsCard.visibility = View.GONE
+        }
+
         if (data.signerInfo.isNotBlank()) {
             binding.signerCard.visibility = View.VISIBLE
             binding.signerInfo.text = data.signerInfo
@@ -182,6 +217,8 @@ class ApkViewerActivity : AppCompatActivity() {
         val fileSize: Long = 0,
         val lastModified: Date = Date(),
         val permissions: List<String> = emptyList(),
+        val dexEntries: List<Pair<String, Long>> = emptyList(),
+        val totalEntries: Int = -1,
         val signerInfo: String = ""
     )
 

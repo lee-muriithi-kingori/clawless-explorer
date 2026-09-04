@@ -19,7 +19,7 @@
             <com.google.android.material.appbar.AppBarLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_gradient_hero"
+                android:background="?attr/colorSurfaceVariant"
                 app:elevation="0dp">
 
                 <androidx.appcompat.widget.Toolbar
@@ -42,7 +42,7 @@
                             android:contentDescription="Back"
                             android:src="@drawable/ic_chevron_right"
                             android:rotation="180"
-                            app:tint="#FFFFFF" />
+                            app:tint="?attr/colorOnSurface" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -50,14 +50,9 @@
                             android:layout_centerInParent="true"
                             android:fontFamily="sans-serif-medium"
                             android:letterSpacing="-0.01"
-                            android:shadowColor="#33000000"
-                            android:shadowDx="0"
-                            android:shadowDy="2"
-                            android:shadowRadius="6"
                             android:text="APK Info"
-                            android:textColor="#FFFFFF"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="19sp" />
                     </RelativeLayout>
                 </androidx.appcompat.widget.Toolbar>
 
@@ -67,19 +62,19 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
                     android:orientation="vertical"
-                    android:paddingBottom="28dp"
+                    android:paddingBottom="24dp"
                     android:paddingHorizontal="16dp">
 
                     <ImageView
                         android:id="@+id/appIcon"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
                         android:background="@drawable/bg_badge_circle"
-                        android:backgroundTint="#33FFFFFF"
+                        android:backgroundTint="?attr/colorPrimaryContainer"
                         android:contentDescription="App icon"
-                        android:padding="16dp"
+                        android:padding="14dp"
                         android:src="@drawable/ic_file_apk"
-                        app:tint="#FFFFFF" />
+                        app:tint="?attr/colorPrimary" />
 
                     <TextView
                         android:id="@+id/appName"
@@ -88,9 +83,8 @@
                         android:layout_marginTop="12dp"
                         android:fontFamily="sans-serif-medium"
                         android:letterSpacing="-0.01"
-                        android:textColor="#FFFFFF"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="19sp" />
 
                     <TextView
                         android:id="@+id/packageName"
@@ -98,7 +92,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:fontFamily="sans-serif"
-                        android:textColor="#B3FFFFFF"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="13sp" />
                 </LinearLayout>
             </com.google.android.material.appbar.AppBarLayout>
@@ -333,6 +327,46 @@
 
                         <TextView
                             android:id="@+id/permissionsList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:fontFamily="monospace"
+                            android:lineSpacingExtra="4dp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Contents card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/contentsCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:letterSpacing="0.04"
+                            android:text="CONTENTS"
+                            android:textColor="?attr/colorPrimary"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/contentsList"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"

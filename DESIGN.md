@@ -77,6 +77,26 @@ Removed in v3: `ParticleFieldView`, `AuroraGradientView`, `MorphingWaveView`,
 `TypeWriterTextView`, `storagePill`, `breadcrumbContainer`, `serverStatusText`.
 List animation is a 140ms fade gated by Settings → UI Animations.
 
+## Script execution (v2.0.2)
+
+- Tapping `.sh` / `.bash` / `.zsh` opens a Run dialog: Run, Edit, Cancel,
+  plus a "Run as root (su)" checkbox carried into the terminal session.
+- `TerminalActivity.intent(ctx, path, asRoot)` applies the root flag on launch,
+  including the SU button state. `chmod +x` fallback kept.
+- A `#!` first line beats the extension map, so scripts that name their own
+  interpreter run as written. Runs report `[exit: N]`, and the log can be
+  saved or shared from the terminal overflow.
+- Long-press sheet keeps its "Run in Terminal" row for scripts, binaries,
+  and extensionless files.
+
+## APK inspect (Apktool-flavored, no decode weight)
+
+- Apktool (Apache 2.0) decodes and rebuilds; too heavy to ship on-device.
+  Borrowed workflow instead: read-only structure peek.
+- `ApkViewerActivity` adds a CONTENTS card: total zip entries plus every
+  `classes*.dex` with size, read via `ZipFile`. Permissions card unchanged.
+- Copy rule: plain text everywhere, no emoji in dialogs, sheets, or logs.
+
 ## Components
 
 ### Storage card

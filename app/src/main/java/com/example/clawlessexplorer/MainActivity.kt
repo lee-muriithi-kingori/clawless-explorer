@@ -21,6 +21,7 @@ import android.transition.Fade
 import android.transition.TransitionManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.OvershootInterpolator
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
@@ -846,11 +847,11 @@ class MainActivity : AppCompatActivity() {
     private fun showCreateOptions() {
         // Speed-dial style options with more actions
         val options = arrayOf(
-            "📁  New Folder",
-            "📄  New File",
-            "📝  New Text Note",
-            "🔍  Search in Files",
-            "📊  Analyze Storage"
+            "New Folder",
+            "New File",
+            "New Text Note",
+            "Search in Files",
+            "Analyze Storage"
         )
         MaterialAlertDialogBuilder(this)
             .setTitle("Quick Actions")
@@ -1064,16 +1065,16 @@ class MainActivity : AppCompatActivity() {
 
         // Build the info text
         val info = buildString {
-            appendLine("📄 Name: $name")
-            appendLine("📂 Path: $path")
-            appendLine("📊 Size: $size")
-            appendLine("🕐 Modified: $modified")
-            appendLine("🔒 Permissions: $permissions")
-            appendLine("📁 Type: $type")
-            appendLine("👁️ Hidden: ${if (isHidden) "Yes" else "No"}")
+            appendLine("Name: $name")
+            appendLine("Path: $path")
+            appendLine("Size: $size")
+            appendLine("Modified: $modified")
+            appendLine("Permissions: $permissions")
+            appendLine("Type: $type")
+            appendLine("Hidden: ${if (isHidden) "Yes" else "No"}")
             if (!file.isDirectory) {
                 appendLine()
-                appendLine("⏳ Computing checksums...")
+                appendLine("Computing checksums...")
             }
         }
 
@@ -1105,16 +1106,16 @@ class MainActivity : AppCompatActivity() {
                 val sha256 = computeHash(file, "SHA-256")
                 withContext(Dispatchers.Main) {
                     val updated = buildString {
-                        appendLine("📄 Name: $name")
-                        appendLine("📂 Path: $path")
-                        appendLine("📊 Size: $size")
-                        appendLine("🕐 Modified: $modified")
-                        appendLine("🔒 Permissions: $permissions")
-                        appendLine("📁 Type: $type")
-                        appendLine("👁️ Hidden: ${if (isHidden) "Yes" else "No"}")
+                        appendLine("Name: $name")
+                        appendLine("Path: $path")
+                        appendLine("Size: $size")
+                        appendLine("Modified: $modified")
+                        appendLine("Permissions: $permissions")
+                        appendLine("Type: $type")
+                        appendLine("Hidden: ${if (isHidden) "Yes" else "No"}")
                         appendLine()
-                        appendLine("🔑 MD5: $md5")
-                        appendLine("🔑 SHA-256: $sha256")
+                        appendLine("MD5: $md5")
+                        appendLine("SHA-256: $sha256")
                     }
                     tv.text = updated
                 }
@@ -1689,12 +1690,16 @@ class MainActivity : AppCompatActivity() {
                 startActivity(HtmlViewerActivity.intent(this, file.absolutePath))
             }
 
+            // Shell scripts → Run dialog (execute in terminal, edit, or cancel)
+            ext in listOf("sh", "bash", "zsh") -> {
+                showScriptRunDialog(file)
+            }
+
             // Code / text → built-in code viewer with syntax highlighting
             ext in listOf(
                 "txt", "log", "conf", "prop", "md", "csv",
                 "kt", "java", "py", "js", "ts", "jsx", "tsx",
                 "c", "cpp", "h", "hpp", "cs", "rb", "go", "rs", "swift",
-                "sh", "bash", "zsh",
                 "css", "scss", "less",
                 "json", "xml", "yaml", "yml",
                 "html", "htm", "sql", "gradle", "toml", "ini", "cfg"
@@ -1717,6 +1722,38 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** Shell scripts ask first: run in the terminal, open in the editor, or back out. */
+    private fun showScriptRunDialog(file: File) {
+        val rootCheck = CheckBox(this).apply {
+            text = "Run as root (su)"
+            isChecked = isRootMode
+        }
+        val label = TextView(this).apply {
+            text = file.name
+            textSize = 14f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface_variant))
+            setPadding(0, 0, 0, 24)
+        }
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(56, 8, 56, 0)
+            addView(label)
+            addView(rootCheck)
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Run script?")
+            .setView(body)
+            .setPositiveButton("Run") { _, _ ->
+                startActivity(TerminalActivity.intent(this, file.absolutePath, rootCheck.isChecked))
+            }
+            .setNegativeButton("Edit") { _, _ ->
+                startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+            }
+            .setNeutralButton("Cancel", null)
+            .show()
     }
 
     private fun showTextFileViewer(file: File) {

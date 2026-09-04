@@ -50,6 +50,7 @@ class TerminalActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_FILE_PATH = "extra_file_path"
+        const val EXTRA_AS_ROOT = "extra_as_root"
         private const val REQUEST_SCRIPT_PICKER = 2001
 
         private val SCRIPT_EXTENSIONS = mapOf(
@@ -85,6 +86,13 @@ class TerminalActivity : AppCompatActivity() {
                 putExtra(EXTRA_FILE_PATH, filePath)
             }
         }
+
+        fun intent(ctx: android.content.Context, filePath: String, asRoot: Boolean): Intent {
+            return Intent(ctx, TerminalActivity::class.java).apply {
+                putExtra(EXTRA_FILE_PATH, filePath)
+                putExtra(EXTRA_AS_ROOT, asRoot)
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -112,7 +120,7 @@ class TerminalActivity : AppCompatActivity() {
             useRoot = !useRoot
             btnRoot.text = if (useRoot) "SU" else "SH"
             btnRoot.setBackgroundColor(if (useRoot) 0xFFEF4444.toInt() else 0xFF10B981.toInt())
-            appendPrompt(if (useRoot) "\n⚡ Root mode enabled (su -c)\n\n" else "\n✓ Shell mode (sh -c)\n\n")
+            appendPrompt(if (useRoot) "Root mode on (su -c)" else "Shell mode (sh -c)")
             refreshPrompt()
         }
 
@@ -168,6 +176,12 @@ class TerminalActivity : AppCompatActivity() {
         refreshPrompt()
 
         // Handle incoming file path
+        if (intent.hasExtra(EXTRA_AS_ROOT)) {
+            useRoot = intent.getBooleanExtra(EXTRA_AS_ROOT, false)
+            btnRoot.text = if (useRoot) "SU" else "SH"
+            btnRoot.setBackgroundColor(if (useRoot) 0xFFEF4444.toInt() else 0xFF10B981.toInt())
+            refreshPrompt()
+        }
         val filePath = intent.getStringExtra(EXTRA_FILE_PATH)
         if (filePath != null) {
             val file = File(filePath)
@@ -273,7 +287,9 @@ class TerminalActivity : AppCompatActivity() {
         }
 
         val ext = file.extension.lowercase()
-        val interpreter = SCRIPT_EXTENSIONS[ext] ?: "sh"
+        // A #! line wins over the extension map, so scripts that declare
+        // their own interpreter run as written.
+        val interpreter = readShebang(file) ?: SCRIPT_EXTENSIONS[ext] ?: "sh"
 
         val timestamp = timeFormat.format(Date())
         appendPrompt("[$timestamp] $interpreter ${file.name}\n")
@@ -312,6 +328,19 @@ class TerminalActivity : AppCompatActivity() {
                 printPrompt()
             }
         })
+    }
+
+    /** First line of the file when it starts with #!, without the marker. */
+    private fun readShebang(file: File): String? {
+        return try {
+            file.bufferedReader().use { reader ->
+                val first = reader.readLine()?.trim() ?: return null
+                if (first.startsWith("#!")) first.removePrefix("#!").trim().ifEmpty { null }
+                else null
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     fun executeBinary(filePath: String) {
@@ -366,7 +395,7 @@ class TerminalActivity : AppCompatActivity() {
             val file = File(dir, fileName)
             file.writeText(logText)
             Toast.makeText(this, "Log saved: ${file.absolutePath}", Toast.LENGTH_LONG).show()
-            appendPrompt("\n✓ Log saved to Downloads/$fileName\n\n")
+            appendPrompt("Log saved to Downloads/$fileName")
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to save: ${e.message}", Toast.LENGTH_SHORT).show()
         }
