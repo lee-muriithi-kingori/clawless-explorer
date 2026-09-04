@@ -45,10 +45,6 @@ class BookmarkManager(context: Context) {
         }
     }
 
-    fun getBookmarkCount(): Int {
-        return getBookmarks().size
-    }
-
     fun updateLastAccessed(path: String) {
         val current = getBookmarks().toMutableList()
         val index = current.indexOfFirst { it.path == path }

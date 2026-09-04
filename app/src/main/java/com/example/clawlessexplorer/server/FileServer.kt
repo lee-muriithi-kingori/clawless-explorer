@@ -211,6 +211,10 @@ class FileServer(private val rootDir: File, private val context: Context) {
         server?.stop(1000, 2000)
     }
 
+    /** LAN URL + bearer token for the settings sheet. Null URL means no Wi-Fi. */
+    fun lanUrl(port: Int = 8080): String? = lanIp()?.let { "http://$it:$port/" }
+    fun token(): String = authToken
+
     private suspend fun requireAuth(call: ApplicationCall): Boolean {
         if (call.request.header("Authorization") != "Bearer $authToken") {
             call.respondText("Unauthorized", status = HttpStatusCode.Unauthorized)
@@ -240,19 +244,25 @@ class FileServer(private val rootDir: File, private val context: Context) {
                 dst.outputStream().use { output -> input.copyTo(output) }
             }
             true
-        } catch (e: Exception) { false }
+        } catch (e: Exception) {
+            android.util.Log.w("FileServer", "copy failed: ${src.absolutePath}", e)
+            false
+        }
     }
 
     private fun buildTree(dir: File, maxDepth: Int): Map<String, Any> {
         val children = if (maxDepth > 0) {
             dir.listFiles()
                 ?.filter { !it.name.startsWith(".") }
-                ?.map { buildTree(it, maxDepth - 1) }
+                ?.map {
+                    if (it.isDirectory) buildTree(it, maxDepth - 1)
+                    else mapOf("name" to it.name, "isDirectory" to false, "size" to it.length())
+                }
                 ?: emptyList()
         } else emptyList()
         return mapOf(
             "name" to dir.name,
-            "isDirectory" to true,
+            "isDirectory" to dir.isDirectory,
             "size" to dir.length(),
             "children" to children
         )

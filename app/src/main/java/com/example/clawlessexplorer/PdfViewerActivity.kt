@@ -112,6 +112,10 @@ class PdfViewerActivity : AppCompatActivity() {
     private fun loadCurrentPage() {
         val doc = pdfDocument ?: return
         binding.progressBar.visibility = View.VISIBLE
+        binding.pdfView.onRenderError = { e ->
+            binding.progressBar.visibility = View.GONE
+            Toast.makeText(this, "Cannot render page: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
         binding.pdfView.loadPage(pdfiumCore, doc, currentPage)
         updatePageCounter()
     }

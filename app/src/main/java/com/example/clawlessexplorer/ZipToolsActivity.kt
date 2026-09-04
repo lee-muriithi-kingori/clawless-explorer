@@ -282,12 +282,8 @@ class ZipToolsActivity : AppCompatActivity() {
     private fun showDestinationFromSource(uri: Uri) {
         val name = getFileNameFromUri(uri)
         val displayName = name.removeSuffix(".zip").removeSuffix(".ZIP")
-        val parentDir = getParentDocumentUri(uri)
-        if (parentDir != null) {
-            destinationPath = parentDir.toString()
-            binding.tvExtractStatus.text = "Extract to: ${getFileNameFromUri(parentDir)}/$displayName/"
-            binding.tvExtractStatus.visibility = View.VISIBLE
-        }
+        binding.tvExtractStatus.text = "Extract to: $displayName/"
+        binding.tvExtractStatus.visibility = View.VISIBLE
     }
 
     private fun updateDestinationDisplay(treeUri: Uri) {
@@ -359,41 +355,29 @@ class ZipToolsActivity : AppCompatActivity() {
         binding.tvExtractStatus.visibility = View.VISIBLE
         binding.tvExtractStatus.text = "Extracting..."
 
+        val treeUri = destinationPath.ifEmpty { null }?.let { runCatching { Uri.parse(it) }.getOrNull() }
+
         lifecycleScope.launch {
             try {
-                val destDir = withContext(Dispatchers.IO) {
-                    resolveDestinationDirectory(sourceUri)
-                }
-
-                withContext(Dispatchers.IO) {
-                    contentResolver.openInputStream(sourceUri)?.use { inputStream ->
-                        ZipInputStream(inputStream).use { zipIn ->
-                            var entry = zipIn.nextEntry
-                            while (entry != null) {
-                                if (!entry.isDirectory) {
-                                    extractEntry(zipIn, destDir, entry.name)
-                                } else {
-                                    val dir = File(destDir, entry.name)
-                                    if (!dir.exists()) dir.mkdirs()
-                                }
-                                zipIn.closeEntry()
-                                entry = zipIn.nextEntry
-                            }
-                        }
+                val report: Triple<Int, Int, String> = withContext(Dispatchers.IO) {
+                    if (treeUri != null && treeUri.scheme == "content") {
+                        extractToTree(sourceUri, treeUri)
+                    } else {
+                        val destDir = resolveDestinationDirectory(sourceUri)
+                        val (extracted, skipped) = extractToDir(sourceUri, destDir)
+                        Triple(extracted, skipped, destDir.absolutePath)
                     }
                 }
-
-                val count = zipEntries.size
+                val (count, skipped, destLabel) = report
                 binding.progressExtract.visibility = View.GONE
-                binding.tvExtractStatus.text = "Done! Extracted $count files"
+                val skippedNote = if (skipped > 0) " ($skipped unsafe paths skipped)" else ""
+                binding.tvExtractStatus.text = "Done! Extracted $count files to $destLabel$skippedNote"
 
                 Snackbar.make(
                     binding.root,
-                    "Extracted $count files",
+                    "Extracted $count files to $destLabel$skippedNote",
                     Snackbar.LENGTH_LONG
-                ).setAction("Open folder") {
-                    openFolderIntent(destDir)
-                }.show()
+                ).show()
 
             } catch (e: Exception) {
                 binding.progressExtract.visibility = View.GONE
@@ -404,25 +388,97 @@ class ZipToolsActivity : AppCompatActivity() {
         }
     }
 
-    private fun extractEntry(zipIn: ZipInputStream, destDir: File, entryName: String) {
-        val outFile = File(destDir, entryName)
-        val parentDir = outFile.parentFile
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs()
+    /** Entry names that would escape [destDir] — the Zip-Slip guard. */
+    private fun isUnsafeEntry(name: String): Boolean {
+        if (name.isBlank()) return true
+        val parts = name.replace('\\', '/').split('/')
+        if (parts.any { it == ".." }) return true
+        if (name.startsWith("/")) return true
+        if (name.length > 2 && name[1] == ':') return true
+        return false
+    }
+
+    private fun safeFile(destDir: File, entryName: String): File? {
+        if (isUnsafeEntry(entryName)) return null
+        val out = File(destDir, entryName)
+        return if (out.canonicalPath == destDir.canonicalPath ||
+            out.canonicalPath.startsWith(destDir.canonicalPath + File.separator)) out else null
+    }
+
+    /** File-based extraction. Returns (extracted count, skipped count). */
+    private fun extractToDir(sourceUri: Uri, destDir: File): Pair<Int, Int> {
+        var count = 0
+        var skipped = 0
+        contentResolver.openInputStream(sourceUri)?.use { inputStream ->
+            ZipInputStream(inputStream).use { zipIn ->
+                var entry = zipIn.nextEntry
+                while (entry != null) {
+                    val out = safeFile(destDir, entry.name)
+                    if (out == null) {
+                        skipped++
+                    } else if (entry.isDirectory) {
+                        out.mkdirs()
+                    } else {
+                        out.parentFile?.mkdirs()
+                        FileOutputStream(out).use { fos -> zipIn.copyTo(fos) }
+                        count++
+                    }
+                    zipIn.closeEntry()
+                    entry = zipIn.nextEntry
+                }
+            }
         }
-        FileOutputStream(outFile).use { fos ->
-            zipIn.copyTo(fos)
+        return count to skipped
+    }
+
+    /** SAF extraction into a user-picked tree. Returns (count, skipped, display name). */
+    private fun extractToTree(sourceUri: Uri, treeUri: Uri): Triple<Int, Int, String> {
+        val tree = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, treeUri)
+            ?: throw IllegalArgumentException("Cannot open destination folder")
+        val zipName = getFileNameFromUri(sourceUri).removeSuffix(".zip").removeSuffix(".ZIP")
+        val root = tree.createDirectory(zipName.ifEmpty { "extracted" })
+            ?: throw IllegalStateException("Cannot create folder in destination")
+        var count = 0
+        var skipped = 0
+        contentResolver.openInputStream(sourceUri)?.use { inputStream ->
+            ZipInputStream(inputStream).use { zipIn ->
+                var entry = zipIn.nextEntry
+                while (entry != null) {
+                    if (isUnsafeEntry(entry.name)) {
+                        skipped++
+                    } else if (!entry.isDirectory) {
+                        if (writeTreeEntry(root, entry.name) { out -> zipIn.copyTo(out) }) count++ else skipped++
+                    }
+                    zipIn.closeEntry()
+                    entry = zipIn.nextEntry
+                }
+            }
+        }
+        return Triple(count, skipped, tree.name ?: "chosen folder")
+    }
+
+    private fun writeTreeEntry(root: androidx.documentfile.provider.DocumentFile, entryName: String, write: (java.io.OutputStream) -> Unit): Boolean {
+        val parts = entryName.replace('\\', '/').split('/').filter { it.isNotEmpty() }
+        if (parts.isEmpty()) return false
+        var dir = root
+        for (part in parts.dropLast(1)) {
+            dir = dir.findFile(part)?.takeIf { it.isDirectory }
+                ?: dir.createDirectory(part)
+                ?: return false
+        }
+        val mime = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(parts.last().substringAfterLast('.', "")) ?: "application/octet-stream"
+        val doc = dir.createFile(mime, parts.last()) ?: return false
+        return try {
+            contentResolver.openOutputStream(doc.uri)?.use(write)
+            true
+        } catch (_: Exception) {
+            doc.delete()
+            false
         }
     }
 
     private fun resolveDestinationDirectory(sourceUri: Uri): File {
-        if (destinationPath.isNotEmpty()) {
-            val destUri = Uri.parse(destinationPath)
-            val destDir = File(cacheDir, "zip_extract_${System.currentTimeMillis()}")
-            destDir.mkdirs()
-            return destDir
-        }
-
         val sourceName = getFileNameFromUri(sourceUri)
         val dirName = sourceName.removeSuffix(".zip").removeSuffix(".ZIP")
         val sourcePath = getFilePathFromUri(sourceUri)
@@ -487,22 +543,6 @@ class ZipToolsActivity : AppCompatActivity() {
         return 0L
     }
 
-    private fun getParentDocumentUri(uri: Uri): Uri? {
-        return try {
-            uri.buildUpon().let { builder ->
-                val path = uri.path
-                if (path != null) {
-                    val lastSep = path.lastIndexOf('/')
-                    if (lastSep > 0) {
-                        builder.encodedPath(path.substring(0, lastSep)).build()
-                    } else null
-                } else null
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     private fun getFilePathFromUri(uri: Uri): String? {
         if (uri.scheme == "file") {
             return uri.path
@@ -528,19 +568,6 @@ class ZipToolsActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(this, "No app found to open this file", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun openFolderIntent(dir: File) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                val uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3A${Uri.encode(dir.absolutePath)}")
-                setDataAndType(uri, "vnd.android.document/directory")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Cannot open folder", Toast.LENGTH_SHORT).show()
         }
     }
 

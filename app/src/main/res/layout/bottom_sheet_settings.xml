@@ -200,7 +200,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:fontFamily="sans-serif-medium"
-                        android:text="UI Animations"
+                        android:text="List animations"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="15sp" />
 
@@ -297,6 +297,16 @@
                             android:text="LAN access at port 8080"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/serverStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="monospace"
+                            android:text="Off. Turn on to browse files from your computer."
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
                     </LinearLayout>
 
                     <com.google.android.material.materialswitch.MaterialSwitch
@@ -348,7 +358,7 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:letterSpacing="0.02"
-            android:text="Clawless Explorer · v2.0.1"
+            android:text="Clawless Explorer · v2.0.2"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
     </LinearLayout>

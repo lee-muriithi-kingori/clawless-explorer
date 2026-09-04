@@ -75,7 +75,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:fontFamily="sans-serif-medium"
-                android:text="v2.0.1"
+                android:text="v2.0.2"
                 android:textColor="?attr/colorOnPrimaryContainer"
                 android:textSize="11sp" />
         </LinearLayout>

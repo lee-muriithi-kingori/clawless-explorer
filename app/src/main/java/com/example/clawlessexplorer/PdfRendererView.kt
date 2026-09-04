@@ -37,6 +37,7 @@ class PdfRendererView @JvmOverloads constructor(
     private val bitmapPaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
     var onRenderComplete: (() -> Unit)? = null
+    var onRenderError: ((Exception) -> Unit)? = null
 
     private val scaleDetector = ScaleGestureDetector(
         context,
@@ -130,7 +131,9 @@ class PdfRendererView @JvmOverloads constructor(
                     invalidate()
                     onRenderComplete?.invoke()
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                val failure = e
+                post { onRenderError?.invoke(failure) }
             }
         }.start()
     }

@@ -42,10 +42,6 @@ class SettingsManager(context: Context) {
         get() = prefs.getBoolean(KEY_SERVER, false)  // Default OFF for security
         set(value) = prefs.edit().putBoolean(KEY_SERVER, value).apply()
 
-    var storageCardCollapsed: Boolean
-        get() = prefs.getBoolean(KEY_STORAGE_COLLAPSED, false)
-        set(value) = prefs.edit().putBoolean(KEY_STORAGE_COLLAPSED, value).apply()
-
     // ============ View mode ============
 
     /** Whether the file list renders as a media grid (true) or list rows (false). */
@@ -154,7 +150,6 @@ class SettingsManager(context: Context) {
         private const val KEY_HIDDEN = "show_hidden_default"
         private const val KEY_SERVER = "server_enabled"
         private const val KEY_RECENTS = "recents_json"
-        private const val KEY_STORAGE_COLLAPSED = "storage_card_collapsed"
         private const val KEY_GRID_MODE = "grid_mode"
         private const val KEY_ROOT_MODE = "root_mode"
         private const val KEY_ROOT_DIALOG_SHOWN = "root_dialog_shown"

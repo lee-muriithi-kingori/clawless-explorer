@@ -20,7 +20,6 @@ import android.animation.ValueAnimator
 import android.transition.Fade
 import android.transition.TransitionManager
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.OvershootInterpolator
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -304,11 +303,6 @@ class MainActivity : AppCompatActivity() {
         binding.storageCard.setOnClickListener {
             startActivity(Intent(this, StorageAnalyzerActivity::class.java))
         }
-    }
-
-    private fun toggleStorageCard() {
-        // Clean v3: single compact card, tap opens analyzer. No expand/collapse circus.
-        startActivity(Intent(this, StorageAnalyzerActivity::class.java))
     }
 
     private fun setupDrawer() {
@@ -685,16 +679,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun copySelectedToClipboard() {
-        val selected = adapter.getSelectedFiles()
-        if (selected.isEmpty()) return
-        val paths = selected.joinToString("\n") { it.absolutePath }
-        val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val clip = android.content.ClipData.newPlainText("File paths", paths)
-        clipboard.setPrimaryClip(clip)
-        Toast.makeText(this, "Copied ${selected.size} path(s)", Toast.LENGTH_SHORT).show()
-    }
-
     private fun pasteFiles() {
         if (!FileClipboard.hasContent) return
         val (success, failures) = FileClipboard.paste(currentPath)
@@ -822,7 +806,18 @@ class MainActivity : AppCompatActivity() {
 
         // Server switch
         val switchServer = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchServer)
+        val serverStatus = view.findViewById<TextView>(R.id.serverStatus)
+        fun refreshServerStatus() {
+            val server = fileServer
+            serverStatus.text = if (server != null && settings.serverEnabled) {
+                val url = server.lanUrl() ?: "starting..."
+                "On at $url  |  Token: ${server.token()}"
+            } else {
+                "Off. Turn on to browse files from your computer."
+            }
+        }
         switchServer.isChecked = settings.serverEnabled
+        refreshServerStatus()
         switchServer.setOnCheckedChangeListener { _, isChecked ->
             settings.serverEnabled = isChecked
             if (isChecked) {
@@ -831,6 +826,7 @@ class MainActivity : AppCompatActivity() {
                 fileServer?.stop()
                 fileServer = null
             }
+            refreshServerStatus()
         }
 
         // Clear recents
@@ -1695,14 +1691,21 @@ class MainActivity : AppCompatActivity() {
                 showScriptRunDialog(file)
             }
 
-            // Code / text → built-in code viewer with syntax highlighting
+            // Plain text → editable text editor
             ext in listOf(
                 "txt", "log", "conf", "prop", "md", "csv",
+                "ini", "cfg", "toml"
+            ) -> {
+                startActivity(TextEditorActivity.intent(this, file.absolutePath))
+            }
+
+            // Code → built-in code viewer with syntax highlighting
+            ext in listOf(
                 "kt", "java", "py", "js", "ts", "jsx", "tsx",
                 "c", "cpp", "h", "hpp", "cs", "rb", "go", "rs", "swift",
                 "css", "scss", "less",
                 "json", "xml", "yaml", "yml",
-                "html", "htm", "sql", "gradle", "toml", "ini", "cfg"
+                "html", "htm", "sql", "gradle"
             ) -> {
                 startActivity(CodeViewerActivity.intent(this, file.absolutePath))
             }
@@ -1750,35 +1753,10 @@ class MainActivity : AppCompatActivity() {
                 startActivity(TerminalActivity.intent(this, file.absolutePath, rootCheck.isChecked))
             }
             .setNegativeButton("Edit") { _, _ ->
-                startActivity(CodeViewerActivity.intent(this, file.absolutePath))
+                startActivity(TextEditorActivity.intent(this, file.absolutePath))
             }
             .setNeutralButton("Cancel", null)
             .show()
-    }
-
-    private fun showTextFileViewer(file: File) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val content = try {
-                if (file.canRead()) {
-                    file.readText()
-                } else {
-                    readTextAsRoot(file)
-                }
-            } catch (e: Exception) {
-                "Error reading file: ${e.message}"
-            }
-
-            withContext(Dispatchers.Main) {
-                val view = layoutInflater.inflate(R.layout.dialog_text_viewer, null)
-                view.findViewById<TextView>(R.id.textContent).text = content
-
-                MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle(file.name)
-                    .setView(view)
-                    .setPositiveButton("Close", null)
-                    .show()
-            }
-        }
     }
 
     private fun readTextAsRoot(file: File): String {
@@ -1895,129 +1873,6 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "Cannot lock root directory", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun showFileInfoDialog(file: File) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val fileSize = if (file.isDirectory) {
-                var total = 0L
-                var count = 0
-                try {
-                    file.walkTopDown().forEach { f ->
-                        if (f.isFile) {
-                            total += f.length()
-                            count++
-                        }
-                    }
-                } catch (_: Exception) {}
-                "$count files, ${Formatter.formatShortFileSize(this@MainActivity, total)} total"
-            } else {
-                val bytes = file.length()
-                val kb = bytes / 1024.0
-                val mb = kb / 1024.0
-                val gb = mb / 1024.0
-                "${Formatter.formatShortFileSize(this@MainActivity, bytes)} (${"%.2f".format(kb)} KB / ${"%.2f".format(mb)} MB / ${"%.2f".format(gb)} GB)"
-            }
-
-            val createdDate = try {
-                val attrs = java.nio.file.Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes::class.java)
-                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(attrs.creationTime().toMillis()))
-            } catch (_: Exception) { "Unknown" }
-
-            val modifiedDate = try {
-                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(file.lastModified()))
-            } catch (_: Exception) { "Unknown" }
-
-            val lastAccessedDate = try {
-                val attrs = java.nio.file.Files.readAttributes(file.toPath(), java.nio.file.attribute.BasicFileAttributes::class.java)
-                java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(attrs.lastAccessTime().toMillis()))
-            } catch (_: Exception) { "Unknown" }
-
-            val permissions = try {
-                val r = if (file.canRead()) "r" else "-"
-                val w = if (file.canWrite()) "w" else "-"
-                val x = if (file.canExecute()) "x" else "-"
-                "$r$w$x"
-            } catch (_: Exception) { "???" }
-
-            val mimeType = getMimeType(file)
-            val nameWithoutExt = file.nameWithoutExtension
-            val ext = file.extension.ifEmpty { "(none)" }
-
-            val info = buildString {
-                appendLine("Full Path: ${file.absolutePath}")
-                appendLine("File Name: ${file.name}")
-                appendLine("Name (no ext): $nameWithoutExt")
-                appendLine("Extension: $ext")
-                appendLine("Type: ${if (file.isDirectory) "Directory" else "File"}")
-                appendLine("Size: $fileSize")
-                appendLine("Created: $createdDate")
-                appendLine("Modified: $modifiedDate")
-                appendLine("Last Accessed: $lastAccessedDate")
-                appendLine("Permissions: $permissions")
-                appendLine("MIME Type: $mimeType")
-            }
-
-            withContext(Dispatchers.Main) {
-                val scrollView = android.widget.ScrollView(this@MainActivity)
-                val textView = TextView(this@MainActivity).apply {
-                    text = info.trimEnd()
-                    setPadding(48, 24, 48, 8)
-                    textSize = 13f
-                    typeface = android.graphics.Typeface.MONOSPACE
-                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
-                }
-                scrollView.addView(textView)
-
-                val dialog = MaterialAlertDialogBuilder(this@MainActivity)
-                    .setTitle("File Info — ${file.name}")
-                    .setView(scrollView)
-
-                if (!file.isDirectory) {
-                    dialog.setPositiveButton("Calculate MD5") { d, _ ->
-                        d.dismiss()
-                        lifecycleScope.launch(Dispatchers.IO) {
-                            try {
-                                val md = java.security.MessageDigest.getInstance("MD5")
-                                file.inputStream().use { input ->
-                                    val buffer = ByteArray(8192)
-                                    var read: Int
-                                    while (input.read(buffer).also { read = it } != -1) {
-                                        md.update(buffer, 0, read)
-                                    }
-                                }
-                                val hash = md.digest().joinToString("") { "%02x".format(it) }
-                                withContext(Dispatchers.Main) {
-                                    val hashText = TextView(this@MainActivity).apply {
-                                        text = "MD5: $hash"
-                                        setPadding(48, 24, 48, 24)
-                                        textSize = 13f
-                                        typeface = android.graphics.Typeface.MONOSPACE
-                                        setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
-                                    }
-                                    MaterialAlertDialogBuilder(this@MainActivity)
-                                        .setTitle("MD5 Hash")
-                                        .setView(hashText)
-                                        .setPositiveButton("Copy") { _, _ ->
-                                            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                                            clipboard.setPrimaryClip(android.content.ClipData.newPlainText("md5", hash))
-                                            Toast.makeText(this@MainActivity, "MD5 copied to clipboard", Toast.LENGTH_SHORT).show()
-                                        }
-                                        .setNegativeButton("Close", null)
-                                        .show()
-                                }
-                            } catch (e: Exception) {
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(this@MainActivity, "Failed to calculate MD5: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                    }
-                }
-
-                dialog.setNegativeButton("Close", null).show()
-            }
         }
     }
 
@@ -2282,10 +2137,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Show/hide paste option based on clipboard
-        if (FileClipboard.hasContent) {
-            // Clipboard has content — paste action available via snackbar after copy/move
-        }
+        // Paste lives in the Snackbar shown after copy/move; nothing to restore here.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (Environment.isExternalStorageManager()) {
                 loadFiles(currentPath)

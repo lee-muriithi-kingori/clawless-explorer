@@ -13,6 +13,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import android.widget.SeekBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.clawlessexplorer.databinding.ActivityMediaViewerBinding
 import java.io.File
@@ -149,6 +150,7 @@ class MediaViewerActivity : AppCompatActivity() {
                 prepareAsync()
             }
         } catch (e: Exception) {
+            Toast.makeText(this, "Cannot play video: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
     }
@@ -173,6 +175,7 @@ class MediaViewerActivity : AppCompatActivity() {
                 prepareAsync()
             }
         } catch (e: Exception) {
+            Toast.makeText(this, "Cannot play audio: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
     }

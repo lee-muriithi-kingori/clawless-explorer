@@ -1,5 +1,37 @@
 # Clawless Explorer Work Log
 
+## Unreleased — stub sweep + honest copy (toward v2.0.2)
+
+Three parallel audits (code stubs, UI consistency, claims vs reality) found
+no TODO markers but plenty of dead and dishonest code. Fixed:
+
+- Deleted with zero callers: `toggleStorageCard`, `copySelectedToClipboard`,
+  `showFileInfoDialog` (122-line duplicate), `showTextFileViewer`,
+  `FloatingSearchBar.kt`, `ShimmerLayout.kt`, `pendingRunPath`,
+  `storageCardCollapsed` pref, `getBookmarkCount`, unreachable `ALL` branch.
+- `TextEditorActivity` is reachable now (script Edit + plain-text taps):
+  undo captures deleted text, redo replaces instead of inserting, files over
+  2 MB open read-only so save cannot truncate, back press asks before
+  discarding edits.
+- `GalleryActivity` is reachable from the image viewer (folder browse button).
+- `ZipToolsActivity`: Zip-Slip guard skips escaping entries and reports the
+  count; the SAF folder picker is honored via DocumentFile; fake "Open folder"
+  intent removed in favor of the destination path in the status text.
+- Analyzer rows (`CategoryFileList`, largest files) open files or explain why.
+- `FileServer`: web UI sends the bearer token on every call including
+  downloads (previously always 401); settings shows the LAN URL and token;
+  `/api/tree` marks files correctly.
+- `TerminalSession`: bad `cd` prints an error instead of executing garbage.
+- Diff/Regex dialogs keep results on screen. PDF render failures toast.
+  Unplayable media toasts instead of silently closing. Invalid regex blocks
+  Apply with an inline error.
+- Copy: README/DESIGN describe what the app does (video frames grid-only,
+  no paste-overwrite, `.zip` only, analyzer denominators). All emoji gone
+  from native UI; web UI uses text glyphs.
+- Left for later: 14 secondary toolbars still gradient (main list is flat),
+  ~200 hardcoded strings not yet in `strings.xml`, no night tokens for
+  file-type foregrounds.
+
 ## 2025-07-10 — Agent B: New Feature Files Created
 
 ### Kotlin Files (5 new)

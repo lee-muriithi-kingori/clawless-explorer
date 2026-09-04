@@ -6,17 +6,12 @@
 
 ## Brand
 
-## Brand
-
 | Token | Hex | Use |
 | --- | --- | --- |
-| **Primary (indigo)** | `#5B5BF6` | FAB, primary actions, gradient hero start |
+| **Primary (indigo)** | `#5B5BF6` | FAB, primary actions |
 | **Primary container** | `#E8E8FF` | Selected chips, selection row background |
-| **Secondary (pink)** | `#FF6B9D` | Gradient hero end, accent highlights |
-| **Tertiary (teal)** | `#00C8B4` | Gradient storage end, success states |
-
-Gradient hero: `linear-gradient(135deg, #5B5BF6 0%, #7B5BF6 50%, #FF6B9D 100%)`
-at 32dp bottom radius.
+| **Secondary (pink)** | `#FF6B9D` | Accent highlights |
+| **Tertiary (teal)** | `#00C8B4` | Success states |
 
 ## File-type accent palette
 
@@ -39,12 +34,12 @@ stacked bar but keep their own filter chip and icon.
 
 ## Shape scale
 
-12 / 16 / 20 / 24 / 32 dp, applied via theme shapes:
+12 / 20 / 28 / 32 dp, applied via theme shapes:
 
 - `ShapeAppearance.Clawless.Small` — 12dp
 - `ShapeAppearance.Clawless.Medium` — 20dp (chip / card)
-- `ShapeAppearance.Clawless.Large` — 28dp (bottom sheet, hero)
-- `ShapeAppearance.Clawless.XLarge` — 32dp (gradient hero bottom)
+- `ShapeAppearance.Clawless.Large` — 28dp (bottom sheet)
+- `ShapeAppearance.Clawless.XLarge` — 32dp
 
 ## Typography
 
@@ -60,7 +55,7 @@ Negative letter-spacing on display + title sizes, positive on all-caps labels.
 
 - `activity_main.xml` — DrawerLayout → CoordinatorLayout
   - `AppBarLayout` flat `?attr/colorSurface`, `liftOnScroll=true` containing:
-    - **Toolbar** — static `TextView` title, 4 icons tinted `onSurface`/`onSurfaceVariant`
+    - **Toolbar** — static `TextView` title, 5 icons (menu, hidden, view, settings, search)
     - **Storage** — single compact `surfaceVariant` card (no pill, no glass, tap → analyzer)
     - **Search** — TextInputLayout, hidden by default
     - **Filter chips** — Material chip group, single-select
@@ -74,8 +69,9 @@ Negative letter-spacing on display + title sizes, positive on all-caps labels.
 - `dialog_text_viewer.xml` — monospace selectable text
 
 Removed in v3: `ParticleFieldView`, `AuroraGradientView`, `MorphingWaveView`,
-`TypeWriterTextView`, `storagePill`, `breadcrumbContainer`, `serverStatusText`.
-List animation is a 140ms fade gated by Settings → UI Animations.
+`TypeWriterTextView`, `storagePill`, `breadcrumbContainer`, `serverStatusText`,
+`FloatingSearchBar`, `ShimmerLayout`. The `tvTypewriter` view ID is legacy naming
+for a static title. List animation is a 140ms fade gated by Settings → List animations.
 
 ## Script execution (v2.0.2)
 
@@ -85,28 +81,29 @@ List animation is a 140ms fade gated by Settings → UI Animations.
   including the SU button state. `chmod +x` fallback kept.
 - A `#!` first line beats the extension map, so scripts that name their own
   interpreter run as written. Runs report `[exit: N]`, and the log can be
-  saved or shared from the terminal overflow.
+  saved or shared from the terminal action bar.
 - Long-press sheet keeps its "Run in Terminal" row for scripts, binaries,
   and extensionless files.
+- "Edit" opens the text editor (`TextEditorActivity`); plain-text taps
+  (txt/md/log/conf/prop/ini/cfg/toml/csv) open it directly.
 
 ## APK inspect (Apktool-flavored, no decode weight)
 
 - Apktool (Apache 2.0) decodes and rebuilds; too heavy to ship on-device.
   Borrowed workflow instead: read-only structure peek.
 - `ApkViewerActivity` adds a CONTENTS card: total zip entries plus every
-  `classes*.dex` with size, read via `ZipFile`. Permissions card unchanged.
+  `.dex` entry with size, read via `ZipFile`. Permissions card unchanged.
 - Copy rule: plain text everywhere, no emoji in dialogs, sheets, or logs.
 
 ## Components
 
 ### Storage card
 
-The glass-style card on top of the gradient hero. The `STORAGE` eyebrow label
-on the top-left, free-of-total on the right. Big "Internal Storage" title
-below. Then the **stacked bar** — file-type breakdown by absolute size
-relative to total storage. The remaining transparent space is the headroom.
-Below: three pill stats (Images / Videos / Audio) with their respective
-accent dots.
+The flat `surfaceVariant` card under the toolbar. The `STORAGE` eyebrow label
+on the top-left, free-of-total on the right. "Internal Storage" title
+below. Then the **stacked bar** — file-type breakdown as weights of total
+storage. Below: three stats (Images / Videos / Audio) with their respective
+accent dots. Tapping the card opens the analyzer.
 
 ### Filter chips
 
@@ -117,9 +114,9 @@ for an at-a-glance category map.
 
 ### Selection action bar
 
-Slides up from the bottom (200dp translation + alpha) when entering
-selection mode. Shows: count label, share, copy, more, delete. Hides the
-chip row and the FAB. Resets when count returns to 0.
+Slides up from the bottom (200px translation + alpha) when entering
+selection mode. Shows: count badge, select-all, share, copy, move, more,
+delete. Hides the chip row and the FAB. Resets when count returns to 0.
 
 ### Bottom sheet (file actions)
 

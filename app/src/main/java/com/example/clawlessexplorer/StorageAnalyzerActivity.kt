@@ -276,7 +276,23 @@ class StorageAnalyzerActivity : AppCompatActivity() {
 
     private fun displayLargestFiles(files: List<FileInfo>) {
         binding.largestFilesRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.largestFilesRecyclerView.adapter = LargestFilesAdapter(files)
+        binding.largestFilesRecyclerView.adapter = LargestFilesAdapter(files) { info ->
+            val file = info.file
+            if (!file.exists()) {
+                Toast.makeText(this, "File no longer exists", Toast.LENGTH_SHORT).show()
+                return@LargestFilesAdapter
+            }
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.provider", file)
+                val view = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, contentResolver.getType(uri) ?: "*/*")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(view, "Open ${file.name} with..."))
+            } catch (e: Exception) {
+                Toast.makeText(this, "No app can open this file", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun openCategoryFiles(categoryInfo: CategoryInfo) {
@@ -290,7 +306,8 @@ class StorageAnalyzerActivity : AppCompatActivity() {
     }
 
     class LargestFilesAdapter(
-        private val files: List<FileInfo>
+        private val files: List<FileInfo>,
+        private val onItemClick: (FileInfo) -> Unit
     ) : RecyclerView.Adapter<LargestFilesAdapter.ViewHolder>() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -318,6 +335,7 @@ class StorageAnalyzerActivity : AppCompatActivity() {
             holder.fileName.text = fileInfo.file.name
             holder.filePath.text = fileInfo.file.parent ?: ""
             holder.fileSize.text = formatBytes(fileInfo.size)
+            holder.itemView.setOnClickListener { onItemClick(fileInfo) }
         }
 
         override fun getItemCount() = files.size

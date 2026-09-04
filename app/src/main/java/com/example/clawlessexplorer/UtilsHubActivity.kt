@@ -151,10 +151,14 @@ class UtilsHubActivity : AppCompatActivity() {
         val inputB = view.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.inputB)
         val resultText = view.findViewById<TextView>(R.id.diffResult)
 
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
             .setTitle("Text Diff")
             .setView(view)
-            .setPositiveButton("Compare") { _, _ ->
+            .setPositiveButton("Compare", null)
+            .setNegativeButton("Close", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val a = inputA.text?.toString() ?: ""
                 val b = inputB.text?.toString() ?: ""
                 val linesA = a.lines()
@@ -175,8 +179,8 @@ class UtilsHubActivity : AppCompatActivity() {
                 resultText.text = result.toString()
                 resultText.visibility = View.VISIBLE
             }
-            .setNegativeButton("Close", null)
-            .show()
+        }
+        dialog.show()
     }
 
     private fun showRegexTesterDialog() {
@@ -185,10 +189,14 @@ class UtilsHubActivity : AppCompatActivity() {
         val testInput = view.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.testString)
         val resultText = view.findViewById<TextView>(R.id.regexResult)
 
-        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
             .setTitle("Regex Tester")
             .setView(view)
-            .setPositiveButton("Test") { _, _ ->
+            .setPositiveButton("Test", null)
+            .setNegativeButton("Close", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 try {
                     val regex = Regex(patternInput.text?.toString() ?: "")
                     val matches = regex.findAll(testInput.text?.toString() ?: "")
@@ -204,8 +212,8 @@ class UtilsHubActivity : AppCompatActivity() {
                     resultText.visibility = View.VISIBLE
                 }
             }
-            .setNegativeButton("Close", null)
-            .show()
+        }
+        dialog.show()
     }
 
     private data class ToolItem(

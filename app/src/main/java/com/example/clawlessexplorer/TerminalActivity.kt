@@ -40,7 +40,6 @@ class TerminalActivity : AppCompatActivity() {
     private var useRoot = false
     private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     private val fullOutput = StringBuilder()
-    private var pendingRunPath: String? = null
 
     private val quickCmds = listOf(
         "ls -la", "pwd", "df -h", "free -m", "top -n 1",
@@ -185,7 +184,6 @@ class TerminalActivity : AppCompatActivity() {
         val filePath = intent.getStringExtra(EXTRA_FILE_PATH)
         if (filePath != null) {
             val file = File(filePath)
-            pendingRunPath = filePath
             val ext = file.extension.lowercase()
             when {
                 ext in SCRIPT_EXTENSIONS -> {
@@ -202,7 +200,6 @@ class TerminalActivity : AppCompatActivity() {
                     appendPrompt("  Use 'Run Script' button for script files.\n")
                 }
             }
-            pendingRunPath = null
         }
 
         input.requestFocus()

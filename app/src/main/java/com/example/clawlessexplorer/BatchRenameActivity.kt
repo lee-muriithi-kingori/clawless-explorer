@@ -105,6 +105,21 @@ class BatchRenameActivity : AppCompatActivity() {
 
     private fun updatePreview() {
         if (selectedFiles.isEmpty()) return
+        if (binding.modeFlipper.displayedChild == 4) {
+            val pattern = binding.etRegexPattern.text?.toString().orEmpty()
+            if (pattern.isNotEmpty()) {
+                try {
+                    Regex(pattern)
+                    binding.tilRegexPattern.error = null
+                } catch (e: Exception) {
+                    binding.tilRegexPattern.error = "Invalid regex"
+                    binding.btnApply.isEnabled = false
+                    return
+                }
+            } else {
+                binding.tilRegexPattern.error = null
+            }
+        }
         val previews = selectedFiles.mapNotNull { uri ->
             val oldName = getFileNameFromUri(uri) ?: return@mapNotNull null
             val newName = computeNewName(oldName)
@@ -112,6 +127,7 @@ class BatchRenameActivity : AppCompatActivity() {
         }
         previewAdapter?.submitList(previews)
         binding.tvPreviewHeader.text = "Rename Preview (${previews.size} files)"
+        binding.btnApply.isEnabled = true
     }
 
     private fun computeNewName(oldName: String): String {

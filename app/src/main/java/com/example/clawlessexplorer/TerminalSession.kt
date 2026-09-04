@@ -43,8 +43,6 @@ class TerminalSession {
         // Cancel any running command.
         activeJob?.cancel()
 
-        val effective = prependCwd(command)
-
         // Update history + index.
         if (command.isNotBlank()) {
             if (history.isEmpty() || history.last() != command) {
@@ -53,6 +51,28 @@ class TerminalSession {
             }
             historyIndex = history.size
         }
+
+        // Bare cd is handled in-process: no shell to spawn, and a bad target
+        // reports a real error instead of executing garbage.
+        if (command.trim().isEmpty()) {
+            onComplete(0)
+            return Job().also { it.complete() }
+        }
+        val cdTarget = matchCd(command)
+        if (cdTarget != null) {
+            val dest = resolveCdTarget(cdTarget)
+            return if (dest != null) {
+                cwd = dest
+                onComplete(0)
+                Job().also { it.complete() }
+            } else {
+                listener.onOutput("cd: $cdTarget: No such file or directory", true)
+                onComplete(1)
+                Job().also { it.complete() }
+            }
+        }
+
+        val effective = "cd '${escape(cwd.absolutePath)}' && ${command.trim()}"
 
         val job = CoroutineScope(SupervisorJob()).launch(Dispatchers.IO) {
             val exitCode = runCommand(effective, listener)
@@ -77,34 +97,25 @@ class TerminalSession {
     }
 
     /**
-     * If the command is a `cd <path>` (optionally `cd` with no args), update
-     * [cwd] and return an empty command so we don't actually exec it.
-     * Otherwise, prefix the command with `cd <cwd> &&` to set the working
-     * directory for the spawned shell.
+     * The cd target when [raw] is a bare `cd` command, null for anything else.
+     * Empty string means plain `cd` (home).
      */
-    private fun prependCwd(raw: String): String {
+    private fun matchCd(raw: String): String? {
         val trimmed = raw.trim()
-        // Empty
-        if (trimmed.isEmpty()) return ""
-        // Pure cd / cd ~ / cd path
-        val cdMatch = Regex("^cd\\s*(.*)$").matchEntire(trimmed)
-        if (cdMatch != null) {
-            val target = cdMatch.groupValues[1].trim()
-            val newCwd = when {
-                target.isEmpty() || target == "~" -> Environment.getExternalStorageDirectory()
-                target == ".." -> cwd.parentFile ?: cwd
-                target.startsWith("/") -> File(target)
-                else -> File(cwd, target)
-            }
-            if (newCwd.isDirectory) {
-                cwd = newCwd
-            } else {
-                return "cd: $target: No such file or directory"
-            }
-            return ""
+        if (trimmed.isEmpty()) return null
+        val match = Regex("^cd\\s*(.*)$").matchEntire(trimmed) ?: return null
+        return match.groupValues[1].trim()
+    }
+
+    /** Resolve a cd target against [cwd], or null when it is not a directory. */
+    private fun resolveCdTarget(target: String): File? {
+        val dest = when {
+            target.isEmpty() || target == "~" -> Environment.getExternalStorageDirectory()
+            target == ".." -> cwd.parentFile ?: cwd
+            target.startsWith("/") -> File(target)
+            else -> File(cwd, target)
         }
-        // Otherwise: prefix with cd
-        return "cd '${escape(cwd.absolutePath)}' && $trimmed"
+        return if (dest.isDirectory) dest else null
     }
 
     private suspend fun runCommand(command: String, listener: OutputListener): Int = withContext(Dispatchers.IO) {

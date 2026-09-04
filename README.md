@@ -12,30 +12,31 @@ Material 3 interface that stays out of your way.
 
 ### File management
 - Full filesystem browsing with breadcrumbs and hidden-file toggle
-- List view **and** media grid view (image *and* video thumbnails)
+- List view **and** media grid view (image thumbnails in both; video frames in grid)
 - Multi-select with share / copy / move / delete action bar
-- Cut, copy, paste with conflict detection (`FileClipboard`)
-- Batch rename with live preview
+- Cut, copy, paste via `FileClipboard` (fails on conflict with the reason shown; no overwrite prompt yet)
+- Batch rename with live preview and invalid-regex guard
 - Bookmarks and recent files
 
 ### Built-in viewers & editors
-- **Text editor** — syntax detection, undo/redo, find & replace
+- **Text editor** — language label, undo/redo, find & single replace-next, unsaved-changes guard (files over 2 MB open read-only to avoid truncation)
 - **Code viewer** — highlighted, monospace, line numbers
-- **Image viewer** — pinch-zoom, gallery swipe navigation
-- **Video player** — gesture controls, 10s skip
-- **PDF viewer** — smooth rendering with page navigation
-- **HTML viewer** — sandboxed local preview
-- **APK inspector** — permissions, activities, extraction
+- **Image viewer** — pinch-zoom, single image; folder swipe lives in the gallery screen
+- **Video player** — 10s skip buttons, tap-to-hide controls
+- **PDF viewer** — paged rendering with page navigation and pinch/double-tap zoom
+- **HTML viewer** — local preview with same-folder asset resolution (JavaScript on)
+- **APK inspector** — permissions, version/SDK info, dex listing, signer info
+- **Shell scripts** — tapping `.sh` asks Run / Edit / Cancel with an as-root option; `#!` lines respected
 
 ### Power tools (Utils Hub)
 - Terminal (with optional root mode)
-- ZIP compress / extract
-- Storage analyzer with type breakdown
-- Hash calculator (MD5 / SHA-1 / SHA-256)
+- ZIP compress / extract (.zip only; unsafe entry paths are skipped and reported)
+- Storage analyzer with type breakdown (percentages are of scanned files; the home card shows share of total storage)
+- Hash calculator (MD5 / SHA-1 / SHA-256 / SHA-512)
 - JSON formatter, Regex tester, Text diff
-- Base64 / URL encode-decode
-- Color picker, IP info
-- **Wi-Fi file server** — access your phone's files from a browser
+- Base64 / URL / HTML encode-decode
+- Color picker, first-IPv4 network info
+- **Wi-Fi file server** — access your phone's files from a browser (token shown in Settings)
 
 ## Screenshots
 

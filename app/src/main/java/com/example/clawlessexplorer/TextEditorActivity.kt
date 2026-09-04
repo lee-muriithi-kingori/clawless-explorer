@@ -23,6 +23,8 @@ class TextEditorActivity : AppCompatActivity() {
     private var file: File? = null
     private var isModified = false
     private var syntaxLang: String = "text"
+    private var truncated = false
+    private var pendingOldText = ""
 
     // Undo/Redo stacks
     private val undoStack = LinkedList<EditAction>()
@@ -52,6 +54,11 @@ class TextEditorActivity : AppCompatActivity() {
         supportActionBar?.title = file?.name
         binding.toolbar.title = file?.name
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                confirmDiscardIfModified { isEnabled = false; onBackPressedDispatcher.onBackPressed() }
+            }
+        })
 
         detectSyntax(filePath)
         loadFile()
@@ -60,16 +67,13 @@ class TextEditorActivity : AppCompatActivity() {
         binding.editor.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 if (!isUndoRedo) {
-                    val oldText = s?.substring(start, start + count) ?: ""
-                    // Will be used in onTextChanged
+                    pendingOldText = s?.substring(start, start + count) ?: ""
                 }
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (!isUndoRedo) {
-                    val oldText = if (before > 0) {
-                        // We don't have the old text in onTextChanged, approximate
-                        ""
-                    } else ""
+                    val oldText = pendingOldText
+                    pendingOldText = ""
                     val newText = s?.substring(start, start + count)?.toString() ?: ""
                     if (newText.isNotEmpty() || before > 0) {
                         val now = System.currentTimeMillis()
@@ -86,7 +90,7 @@ class TextEditorActivity : AppCompatActivity() {
                                 return
                             }
                         }
-                        undoStack.add(EditAction(start, "", newText))
+                        undoStack.add(EditAction(start, oldText, newText))
                         redoStack.clear()
                         lastEditTime = now
                     }
@@ -125,6 +129,7 @@ class TextEditorActivity : AppCompatActivity() {
             try {
                 val content = withContext(Dispatchers.IO) {
                     if (f.length() > 2 * 1024 * 1024) {
+                        truncated = true
                         f.readText().take(2 * 1024 * 1024)
                     } else {
                         f.readText()
@@ -133,6 +138,9 @@ class TextEditorActivity : AppCompatActivity() {
                 binding.editor.setText(content)
                 isModified = false
                 updateStatus()
+                if (truncated) {
+                    Snackbar.make(binding.root, "File too large: showing first 2 MB, saving disabled", Snackbar.LENGTH_LONG).show()
+                }
             } catch (e: Exception) {
                 Snackbar.make(binding.root, "Error loading file: ${e.message}", Snackbar.LENGTH_LONG).show()
             }
@@ -141,6 +149,10 @@ class TextEditorActivity : AppCompatActivity() {
 
     private fun saveFile() {
         val f = file ?: return
+        if (truncated) {
+            Snackbar.make(binding.root, "Not saving: only part of this file is loaded", Snackbar.LENGTH_LONG).show()
+            return
+        }
         lifecycleScope.launch {
             try {
                 val content = binding.editor.text.toString()
@@ -165,6 +177,7 @@ class TextEditorActivity : AppCompatActivity() {
         val editable = binding.editor.text
         editable.replace(action.start, action.start + action.newText.length, action.oldText)
         isUndoRedo = false
+        isModified = true
         updateStatus()
     }
 
@@ -174,8 +187,9 @@ class TextEditorActivity : AppCompatActivity() {
         val action = redoStack.removeLast()
         undoStack.add(action)
         val editable = binding.editor.text
-        editable.insert(action.start, action.newText)
+        editable.replace(action.start, action.start + action.oldText.length, action.newText)
         isUndoRedo = false
+        isModified = true
         updateStatus()
     }
 
@@ -220,7 +234,28 @@ class TextEditorActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Warn about unsaved changes would go here in production
         super.onDestroy()
+    }
+
+    fun confirmDiscardIfModified(onDiscard: () -> Unit) {
+        if (!isModified) {
+            onDiscard()
+            return
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Discard changes?")
+            .setMessage("You have unsaved edits.")
+            .setPositiveButton("Discard") { _, _ -> onDiscard() }
+            .setNegativeButton("Keep editing", null)
+            .show()
+    }
+
+    companion object {
+        const val EXTRA_PATH = "extra_path"
+
+        fun intent(context: android.content.Context, path: String): android.content.Intent =
+            android.content.Intent(context, TextEditorActivity::class.java).apply {
+                putExtra(EXTRA_PATH, path)
+            }
     }
 }

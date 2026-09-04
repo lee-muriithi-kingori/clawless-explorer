@@ -74,6 +74,20 @@ class ImageViewerActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener { finish() }
 
+        binding.btnGallery.setOnClickListener {
+            val dir = file.parentFile
+            if (dir != null && dir.isDirectory) {
+                val gallery = Intent(this, GalleryActivity::class.java).apply {
+                    putExtra("extra_dir_path", dir.absolutePath)
+                    putExtra("extra_start_file", file.name)
+                }
+                startActivity(gallery)
+                finish()
+            } else {
+                Toast.makeText(this, "No folder to browse", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         binding.btnShare.setOnClickListener {
             val uri = androidx.core.content.FileProvider.getUriForFile(
                 this, "${packageName}.provider", file

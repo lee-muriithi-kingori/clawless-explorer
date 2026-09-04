@@ -65,7 +65,7 @@ class FileAdapter(
                 DOCUMENT -> ext in listOf("pdf", "doc", "docx", "txt", "rtf", "odt", "epub", "log", "conf", "prop", "md", "csv", "xls", "xlsx", "ppt", "pptx")
                 ARCHIVE -> ext in listOf("zip", "rar", "7z", "tar", "gz", "bz2", "xz", "tgz")
                 APK -> ext == "apk"
-                ALL -> true
+                else -> false
             }
         }
     }

@@ -91,9 +91,18 @@
 <div class="toast" id="toast"></div>
 <script>
 let currentPath = '';
+const AUTH = (window.__AUTH_TOKEN || '');
+
+async function api(url, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({ 'Authorization': 'Bearer ' + AUTH }, opts.headers || {});
+  const r = await fetch(url, opts);
+  if (r.status === 401) toast('Unauthorized: toggle the server off and on');
+  return r;
+}
 
 async function loadInfo() {
-  const r = await fetch('/api/info'); const j = await r.json();
+  const r = await api('/api/info'); const j = await r.json();
   document.getElementById('rootInfo').textContent = 'LAN access: ' + j.lanUrl;
 }
 
@@ -112,7 +121,7 @@ function buildPathBar() {
 async function list(path) {
   currentPath = path || '';
   buildPathBar();
-  const r = await fetch('/api/files?path=' + encodeURIComponent(currentPath));
+  const r = await api('/api/files?path=' + encodeURIComponent(currentPath));
   const files = await r.json();
   const list = document.getElementById('fileList');
   if (!files.length) { list.innerHTML = '<div class="row" style="cursor:default;color:var(--on-variant);justify-content:center;">Empty folder</div>'; return; }
@@ -125,11 +134,11 @@ async function list(path) {
     const icon = isDir ? 'folder' : 'file';
     return ''
       + '<div class="row" onclick="' + (isDir ? "navigate('" + path + "')" : 'void(0)') + '">'
-      + '<div class="icon ' + icon + '">' + (isDir ? '📁' : '📄') + '</div>'
+      + '<div class="icon ' + icon + '">' + (isDir ? 'D' : 'F') + '</div>'
       + '<div class="name">' + f.name + '</div>'
       + '<div class="meta">' + meta + '</div>'
       + '<div class="actions">'
-      + (isDir ? '' : '<a href="/download?path=' + encodeURIComponent(path) + '">Download</a>')
+      + (isDir ? '' : '<button onclick="event.stopPropagation();downloadFile(\'' + path + '\')">Download</button>')
       + '<button onclick="event.stopPropagation();copyFile(\'' + path + '\')">Copy</button>'
       + '<button class="danger" onclick="event.stopPropagation();deleteFile(\'' + path + '\')">Delete</button>'
       + '</div></div>';
@@ -154,7 +163,7 @@ function formatSize(b) {
 async function copyFile(path) {
   const dst = prompt('Copy to folder (relative path, e.g. DCIM):', '');
   if (dst === null) return;
-  const r = await fetch('/api/copy', {
+  const r = await api('/api/copy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ src: path, dst: dst, overwrite: false })
@@ -165,7 +174,7 @@ async function copyFile(path) {
 
 async function deleteFile(path) {
   if (!confirm('Delete ' + path + '?')) return;
-  const r = await fetch('/api/delete?path=' + encodeURIComponent(path), { method: 'DELETE' });
+  const r = await api('/api/delete?path=' + encodeURIComponent(path), { method: 'DELETE' });
   if (r.ok) { toast('Deleted'); list(currentPath); }
   else toast('Failed: ' + (await r.text()));
 }
@@ -173,18 +182,18 @@ async function deleteFile(path) {
 async function doSearch() {
   const q = document.getElementById('searchInput').value.trim();
   if (!q) return list(currentPath);
-  const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+  const r = await api('/api/search?q=' + encodeURIComponent(q));
   const hits = await r.json();
   const list = document.getElementById('fileList');
   if (!hits.length) { list.innerHTML = '<div class="row" style="cursor:default;color:var(--on-variant);justify-content:center;">No matches</div>'; return; }
   list.innerHTML = hits.map(f => {
     const isDir = f.isDirectory;
     return '<div class="row" onclick="' + (isDir ? "navigate('" + f.path + "')" : 'void(0)') + '">'
-      + '<div class="icon ' + (isDir ? 'folder' : 'file') + '">' + (isDir ? '📁' : '📄') + '</div>'
+      + '<div class="icon ' + (isDir ? 'folder' : 'file') + '">' + (isDir ? 'D' : 'F') + '</div>'
       + '<div class="name">' + f.name + '</div>'
       + '<div class="meta">' + f.path + '</div>'
       + '<div class="actions">'
-      + (isDir ? '' : '<a href="/download?path=' + encodeURIComponent(f.path) + '">Download</a>')
+      + (isDir ? '' : '<button onclick="event.stopPropagation();downloadFile(\'' + f.path + '\')">Download</button>')
       + '<button class="danger" onclick="event.stopPropagation();deleteFile(\'' + f.path + '\')">Delete</button>'
       + '</div></div>';
   }).join('');
@@ -195,13 +204,25 @@ async function uploadFile() {
   if (!file) { toast('Pick a file first'); return; }
   const status = document.getElementById('uploadStatus');
   status.textContent = 'Uploading…';
-  const r = await fetch('/api/upload?name=' + encodeURIComponent(file.name) + '&path=' + encodeURIComponent(currentPath), {
+  const r = await api('/api/upload?name=' + encodeURIComponent(file.name) + '&path=' + encodeURIComponent(currentPath), {
     method: 'PUT',
     headers: { 'Content-Type': file.type || 'application/octet-stream' },
     body: file
   });
   if (r.ok) { status.textContent = 'Uploaded'; toast('Uploaded ' + file.name); list(currentPath); }
   else status.textContent = 'Failed: ' + (await r.text());
+}
+
+async function downloadFile(path) {
+  const r = await api('/download?path=' + encodeURIComponent(path));
+  if (!r.ok) { toast('Failed: ' + (await r.text())); return; }
+  const blob = await r.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = path.split('/').pop();
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
 function toast(msg) {

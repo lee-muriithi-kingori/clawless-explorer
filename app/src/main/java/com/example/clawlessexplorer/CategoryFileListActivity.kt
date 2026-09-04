@@ -66,13 +66,35 @@ class CategoryFileListActivity : AppCompatActivity() {
         binding.fileCount.text = "${entries.size} files"
 
         binding.fileListRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.fileListRecyclerView.adapter = FileListAdapter(entries)
+        binding.fileListRecyclerView.adapter = FileListAdapter(entries) { entry ->
+            val file = File(entry.path)
+            if (!file.exists()) {
+                Toast.makeText(this, "File no longer exists", Toast.LENGTH_SHORT).show()
+                return@FileListAdapter
+            }
+            if (file.isDirectory) {
+                Toast.makeText(this, "Opening folders from here is not supported yet", Toast.LENGTH_SHORT).show()
+                return@FileListAdapter
+            }
+            // Route through a plain view intent; failures fall back to a message.
+            try {
+                val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.provider", file)
+                val view = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, contentResolver.getType(uri) ?: "*/*")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(view, "Open ${file.name} with..."))
+            } catch (e: Exception) {
+                Toast.makeText(this, "No app can open this file", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     data class FileEntry(val path: String, val size: Long)
 
     class FileListAdapter(
-        private val entries: List<FileEntry>
+        private val entries: List<FileEntry>,
+        private val onItemClick: (FileEntry) -> Unit
     ) : RecyclerView.Adapter<FileListAdapter.ViewHolder>() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -93,6 +115,7 @@ class CategoryFileListActivity : AppCompatActivity() {
             holder.fileName.text = file.name
             holder.filePath.text = file.parent ?: ""
             holder.fileSize.text = formatBytes(entry.size)
+            holder.itemView.setOnClickListener { onItemClick(entry) }
         }
 
         override fun getItemCount() = entries.size
