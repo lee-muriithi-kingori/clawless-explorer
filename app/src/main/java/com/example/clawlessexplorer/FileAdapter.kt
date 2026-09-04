@@ -32,8 +32,13 @@ class FileAdapter(
     private var searchQuery: String = ""
     private var typeFilter: TypeFilter = TypeFilter.ALL
     private var gridMode: Boolean = false
+    private var animationsEnabled: Boolean = true
     var isSelectionMode = false
         private set
+
+    fun setAnimationsEnabled(enabled: Boolean) {
+        animationsEnabled = enabled
+    }
 
     companion object {
         const val TYPE_LIST = 0
@@ -189,22 +194,16 @@ class FileAdapter(
             }
         }
 
-        // Subtle entry animation on first bind
-        if (!holder.itemView.hasBeenAnimated) {
+        // Clean v3: no overshoot pop. Optional subtle fade, gated by settings.
+        if (animationsEnabled && !holder.itemView.hasBeenAnimated) {
             holder.itemView.alpha = 0f
-            holder.itemView.translationY = 16f
-            holder.itemView.scaleX = 0.96f
-            holder.itemView.scaleY = 0.96f
             holder.itemView.animate()
                 .alpha(1f)
-                .translationY(0f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(280L)
-                .setStartDelay((position.coerceAtMost(15) * 25L))
-                .setInterpolator(android.view.animation.OvershootInterpolator(0.8f))
+                .setDuration(140L)
                 .start()
             holder.itemView.hasBeenAnimated = true
+        } else {
+            holder.itemView.alpha = 1f
         }
     }
 

@@ -1,7 +1,10 @@
-# Clawless Explorer — Design Notes
+# Clawless Explorer — Design Notes (Clean v3)
 
-Quick reference for the current visual system. Pair with `preview.html` at the
-project root for live visual references.
+> v3 cleanup: flat Material 3 surface, no gradient hero, no canvas animations,
+> single breadcrumb system. Content-first, Files-by-Google calm.
+> Dials: VARIANCE 4 / MOTION 3 / DENSITY 6.
+
+## Brand
 
 ## Brand
 
@@ -53,22 +56,26 @@ Sans-serif family throughout, with three weight tiers:
 
 Negative letter-spacing on display + title sizes, positive on all-caps labels.
 
-## Layout
+## Layout (v3 clean)
 
 - `activity_main.xml` — DrawerLayout → CoordinatorLayout
-  - `AppBarLayout` (no scroll, stays pinned) containing:
-    - **Hero** — gradient + white toolbar + glass storage card
-    - **Search** — TextInputLayout, hidden by default, slides in
-    - **Breadcrumb** — pill chips, horizontal scroll
+  - `AppBarLayout` flat `?attr/colorSurface`, `liftOnScroll=true` containing:
+    - **Toolbar** — static `TextView` title, 4 icons tinted `onSurface`/`onSurfaceVariant`
+    - **Storage** — single compact `surfaceVariant` card (no pill, no glass, tap → analyzer)
+    - **Search** — TextInputLayout, hidden by default
     - **Filter chips** — Material chip group, single-select
+  - `BreadcrumbView` — single path system (legacy `breadcrumbContainer` removed)
   - `SwipeRefreshLayout` → `RecyclerView`
   - `MaterialCardView` — bottom selection action bar (hidden by default)
-  - `ExtendedFloatingActionButton` — "New" FAB, shrinks on scroll down
-- `item_file.xml` — MaterialCardView (checkable, 20dp radius) → horizontal row:
-  badge (48dp) + name/lock + meta + more button
+  - `ExtendedFloatingActionButton` — "New" FAB
+- `item_file.xml` — MaterialCardView 16dp radius, 42dp badge + name/meta + more
 - `bottom_sheet_file_actions.xml` — vertical list with preview header
-- `nav_header.xml` — gradient hero, app logo, version pill
+- `nav_header.xml` — flat `surfaceVariant`, no gradient, no glass
 - `dialog_text_viewer.xml` — monospace selectable text
+
+Removed in v3: `ParticleFieldView`, `AuroraGradientView`, `MorphingWaveView`,
+`TypeWriterTextView`, `storagePill`, `breadcrumbContainer`, `serverStatusText`.
+List animation is a 140ms fade gated by Settings → UI Animations.
 
 ## Components
 
@@ -101,14 +108,13 @@ chip row and the FAB. Resets when count returns to 0.
 treatment as the row, with name + meta. Below: action rows. The Delete
 row is the only one with the error color.
 
-## Animations
+## Animations (v3)
 
-- Hero toolbar title uses the existing `TypeWriterTextView` (kept from v1)
-- File rows fade in with a 12-position stagger on first bind
+- Toolbar title is static text (instant legibility)
+- File rows: 140ms alpha fade on first bind, disabled via Settings
 - Search bar slides down + fades in
-- Selection bar slides up + fades in, FAB shrinks
-- FAB shrinks on scroll down, extends on scroll up
-- Swipe-refresh uses a triple-tone color scheme (primary, secondary, tertiary)
+- Selection bar slides up + fades in, FAB hides/shows
+- No background loops, no typewriter, no overshoot
 
 ## Things to know when extending
 

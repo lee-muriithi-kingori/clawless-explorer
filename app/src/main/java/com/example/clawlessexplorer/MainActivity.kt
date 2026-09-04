@@ -132,8 +132,7 @@ class MainActivity : AppCompatActivity() {
         checkPermissionsAndLoadFiles()
         if (settings.serverEnabled) startFileServer()
 
-        binding.tvTypewriter.setCharacterDelay(100)
-        binding.tvTypewriter.animateText("Clawless Explorer")
+        binding.tvTypewriter.text = "Clawless Explorer"
 
         // Show root/non-root dialog on first launch
         if (!settings.hasShownRootDialog) {
@@ -238,13 +237,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnHiddenToggle.alpha = if (showHiddenFiles) 1f else 0.5f
     }
 
-    /** Configure the animated particle/wave/aurora background. */
+    /** Clean v3: no canvas background animations. List animation flag only. */
     private fun setupAnimatedBackground() {
-        if (!settings.animationsEnabled) {
-            binding.particleField.visibility = View.GONE
-            binding.morphingWave.visibility = View.GONE
-            binding.auroraGradient.visibility = View.GONE
-        }
+        // No-op: hero canvas views removed. animationsEnabled now gates list fade only.
+        adapter.setAnimationsEnabled(settings.animationsEnabled)
     }
 
     /** Show the first-launch root mode selection dialog. */
@@ -303,54 +299,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupStorageCard() {
-        val collapsed = settings.storageCardCollapsed
-        binding.storageCard.visibility = if (collapsed) View.GONE else View.VISIBLE
-        binding.storagePill.visibility = if (collapsed) View.VISIBLE else View.GONE
-
-        binding.storageCard.setOnClickListener { toggleStorageCard() }
-        binding.storagePill.setOnClickListener { toggleStorageCard() }
+        binding.storageCard.visibility = View.VISIBLE
+        binding.storageCard.setOnClickListener {
+            startActivity(Intent(this, StorageAnalyzerActivity::class.java))
+        }
     }
 
     private fun toggleStorageCard() {
-        val collapse = binding.storageCard.visibility == View.VISIBLE
-        val expand = !collapse
-
-        if (collapse) {
-            // Collapse: animate card out, pill in
-            val cardAnim = binding.storageCard.animate()
-                .alpha(0f)
-                .scaleY(0.9f)
-                .setDuration(180L)
-                .withEndAction { binding.storageCard.visibility = View.GONE }
-            val pillAnim = binding.storagePill.animate()
-                .alpha(1f)
-                .scaleY(1f)
-                .setDuration(220L)
-            binding.storagePill.alpha = 0f
-            binding.storagePill.scaleY = 0.9f
-            binding.storagePill.visibility = View.VISIBLE
-            pillAnim.start()
-            cardAnim.start()
-            binding.storageChevron.animate().rotation(90f).setDuration(180L).start()
-        } else {
-            // Expand
-            binding.storagePill.animate()
-                .alpha(0f)
-                .scaleY(0.9f)
-                .setDuration(160L)
-                .withEndAction { binding.storagePill.visibility = View.GONE }
-                .start()
-            binding.storageCard.alpha = 0f
-            binding.storageCard.scaleY = 0.9f
-            binding.storageCard.visibility = View.VISIBLE
-            binding.storageCard.animate()
-                .alpha(1f)
-                .scaleY(1f)
-                .setDuration(220L)
-                .start()
-            binding.storageChevron.animate().rotation(-90f).setDuration(180L).start()
-        }
-        settings.storageCardCollapsed = expand
+        // Clean v3: single compact card, tap opens analyzer. No expand/collapse circus.
+        startActivity(Intent(this, StorageAnalyzerActivity::class.java))
     }
 
     private fun setupDrawer() {
@@ -490,7 +447,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSelectionTitle(count: Int) {
-        binding.tvTypewriter.animateText("$count selected")
+        binding.tvTypewriter.text = "$count selected"
         // Just the number for the badge
         binding.selectionBarCount.text = count.toString()
         // Animate badge scale
@@ -504,7 +461,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetToolbar() {
-        binding.tvTypewriter.animateText("Clawless Explorer")
+        binding.tvTypewriter.text = "Clawless Explorer"
         binding.toolbar.menu.clear()
         binding.toolbar.inflateMenu(R.menu.menu_main)
         binding.btnMenu.setImageResource(R.drawable.ic_menu)
@@ -568,7 +525,7 @@ class MainActivity : AppCompatActivity() {
             if (isGridView) R.drawable.ic_list_view else R.drawable.ic_grid_view
         )
         binding.btnViewToggle.imageTintList = android.content.res.ColorStateList.valueOf(
-            androidx.core.content.ContextCompat.getColor(this, R.color.text_on_hero)
+            androidx.core.content.ContextCompat.getColor(this, R.color.md_on_surface_variant)
         )
     }
 
@@ -838,14 +795,12 @@ class MainActivity : AppCompatActivity() {
             loadFiles(currentPath)
         }
 
-        // Animations switch
+        // Animations switch — clean v3: gates subtle list fade only.
         val switchAnimations = view.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchAnimations)
         switchAnimations.isChecked = settings.animationsEnabled
         switchAnimations.setOnCheckedChangeListener { _, isChecked ->
             settings.animationsEnabled = isChecked
-            binding.particleField.visibility = if (isChecked) View.VISIBLE else View.GONE
-            binding.morphingWave.visibility = if (isChecked) View.VISIBLE else View.GONE
-            binding.auroraGradient.visibility = if (isChecked) View.VISIBLE else View.GONE
+            adapter.setAnimationsEnabled(isChecked)
         }
 
         // Root mode switch
@@ -2104,49 +2059,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateBreadcrumbs(directory: File) {
-        binding.breadcrumbContainer.removeAllViews()
-        val rootPath = Environment.getExternalStorageDirectory().absolutePath
-
-        if (directory.absolutePath.startsWith(rootPath)) {
-            val relativePath = directory.absolutePath.removePrefix(rootPath)
-            val parts = relativePath.split("/").filter { it.isNotEmpty() }
-            addBreadcrumb("Storage", Environment.getExternalStorageDirectory(), isRoot = true)
-            var acc = rootPath
-            parts.forEach { part ->
-                acc += "/$part"
-                addBreadcrumb(part, File(acc), isRoot = false)
-            }
-        } else {
-            val parts = directory.absolutePath.split("/").filter { it.isNotEmpty() }
-            addBreadcrumb("Root", File("/"), isRoot = true)
-            var acc = ""
-            parts.forEach { part ->
-                acc += "/$part"
-                addBreadcrumb(part, File(acc), isRoot = false)
-            }
+        // Clean v3: single BreadcrumbView system. Legacy chip strip removed.
+        binding.breadcrumb.setPath(directory) { file ->
+            navigateTo(file)
         }
-    }
-
-    private fun addBreadcrumb(text: String, file: File, isRoot: Boolean) {
-        val tv = TextView(this).apply {
-            this.text = if (isRoot) text else "› $text"
-            setPadding(if (isRoot) 14 else 8, 8, 14, 8)
-            background = ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_badge_generic)
-            backgroundTintList = android.content.res.ColorStateList.valueOf(
-                ContextCompat.getColor(this@MainActivity, R.color.md_surface_variant)
-            )
-            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
-            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
-            textSize = 13f
-            letterSpacing = 0.01f
-            setOnClickListener { navigateTo(file) }
-        }
-        val params = android.widget.LinearLayout.LayoutParams(
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        params.setMargins(0, 0, 8, 0)
-        binding.breadcrumbContainer.addView(tv, params)
     }
 
     private fun updateStorageInfo() {
@@ -2164,7 +2080,6 @@ class MainActivity : AppCompatActivity() {
         val availableStr = Formatter.formatShortFileSize(this, availableSize)
 
         binding.storageText.text = "$availableStr free of $totalStr"
-        binding.storagePillLabel.text = "Internal · $availableStr free of $totalStr"
 
         calculateCategorySizes(path, totalSize)
     }
