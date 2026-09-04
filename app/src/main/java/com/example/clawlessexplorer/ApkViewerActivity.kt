@@ -102,21 +102,20 @@ class ApkViewerActivity : AppCompatActivity() {
 
                     // Apktool-style structure peek: dex files plus entry count,
                     // read straight from the zip without decoding anything.
-                    val dexEntries: List<Pair<String, Long>>
-                    val totalEntries: Int
-                    try {
+                    val contents: Pair<List<Pair<String, Long>>, Int> = try {
                         java.util.zip.ZipFile(file).use { zip ->
                             val entries = java.util.Collections.list(zip.entries())
-                            totalEntries = entries.size
-                            dexEntries = entries
+                            val dex = entries
                                 .filter { it.name.endsWith(".dex") }
                                 .sortedBy { it.name }
                                 .map { it.name to it.size }
+                            dex to entries.size
                         }
                     } catch (_: Exception) {
-                        dexEntries = emptyList()
-                        totalEntries = -1
+                        emptyList<Pair<String, Long>>() to -1
                     }
+                    val dexEntries = contents.first
+                    val totalEntries = contents.second
 
                     val signerInfo = try {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
