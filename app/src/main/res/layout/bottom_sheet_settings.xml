@@ -348,7 +348,7 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:letterSpacing="0.02"
-            android:text="Clawless Explorer · v1.0.0"
+            android:text="Clawless Explorer · v2.0.1"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp" />
     </LinearLayout>
